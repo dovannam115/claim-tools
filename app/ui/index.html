@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>Claim &amp; Equipment Tools</title>
+<link rel="icon" id="ico" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23c96442'/%3E%3Cpath d='M18 20h28M18 32h20M18 44h28' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#262624; --elev:#2F2D29; --card:#34322D; --hover:#3D3B36;
+    --line:#46443F; --line2:#4D4A45;
+    --fg:#F5F4ED; --muted:#A19D93; --dim:#777267;
+    --ember:#c96442; --ember-lit:#d97757;
+    --good:#34d399; --warn:#f59e0b; --bad:#f87171;
+    --console:#1F1E1C; --console-fg:#C9C5B9; --field:#262624;
+  }
+  :root[data-theme="light"]{
+    --bg:#FFFFFF; --elev:#F7F6F2; --card:#FFFFFF; --hover:#F1EFE9;
+    --line:#E6E3DB; --line2:#D6D2C8;
+    --fg:#1F1E1C; --muted:#6B675E; --dim:#9A958A;
+    --ember:#c96442; --ember-lit:#b8583a;
+    --good:#0f8a5f; --warn:#b26a00; --bad:#c2410c;
+    --console:#F7F6F2; --console-fg:#3D3B36; --field:#FFFFFF;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg); color:var(--fg); display:flex;
+       font:14px/1.45 "Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+       -webkit-font-smoothing:antialiased; letter-spacing:-.006em}
+  ::selection{background:rgba(217,119,87,.30)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  aside{width:240px; flex:0 0 240px; background:var(--elev); border-right:1px solid var(--line);
+        display:flex; flex-direction:column; padding:16px 12px; gap:16px; user-select:none}
+  .brand{padding:2px 6px 0; display:flex; align-items:center; gap:10px}
+  .brand img{width:34px; height:34px; border-radius:9px}
+  .brand b{display:block; font-size:13px; font-weight:700; letter-spacing:.02em; white-space:nowrap}
+  .brand span{display:block; color:var(--dim); font-size:11px; letter-spacing:.06em; margin-top:1px}
+  nav{display:flex; flex-direction:column; gap:2px; overflow:auto}
+  .grp-h{font-size:10.5px; color:var(--dim); letter-spacing:.12em; text-transform:uppercase; padding:12px 10px 4px}
+  .grp-h:first-child{padding-top:2px}
+  nav button{display:flex; align-items:center; justify-content:space-between; gap:8px; background:none; border:0;
+             color:var(--muted); text-align:left; cursor:pointer; padding:8px 10px; border-radius:9px;
+             font:inherit; font-size:13.5px}
+  nav button:hover{background:var(--hover); color:var(--fg)}
+  nav button.on{background:var(--card); color:var(--fg); box-shadow:0 0 0 1px var(--line) inset}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--good);display:none;flex:0 0 7px}
+  .dot.run{display:block;background:var(--ember);animation:pulse 1.2s ease-in-out infinite}
+  .dot.ok{display:block;background:var(--good)}
+  .dot.bad{display:block;background:var(--bad)}
+  .dot.new{display:block;background:var(--good)}
+  @keyframes pulse{50%{opacity:.35}}
+  .side-end{margin-top:auto; display:flex; flex-direction:column; gap:6px; padding:0 2px}
+  .side-end .row{display:flex; gap:6px}
+  .ver{color:var(--dim); font-size:11.5px; padding:2px 8px 0}
+
+  main{flex:1; min-width:0; display:flex; flex-direction:column}
+  header{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:14px 22px 12px;
+         border-bottom:1px solid var(--line); min-height:58px}
+  header h1{font-size:17px; margin:0; font-weight:650; white-space:nowrap}
+  header .sp{flex:1}
+  .wrap{flex:1; overflow:auto; padding:18px 22px 26px}
+  .cols{display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:14px; align-items:start}
+  @media (max-width:980px){.cols{grid-template-columns:1fr}}
+  .stack{display:flex; flex-direction:column; gap:14px; min-width:0}
+
+  button{font:inherit; cursor:pointer; white-space:nowrap; transition:background .18s,border-color .18s,color .18s,opacity .18s}
+  button:active:not(:disabled){transform:scale(.985)}
+  .btn{background:var(--card); color:var(--fg); border:1px solid var(--line); padding:8px 13px; border-radius:9px}
+  .btn:hover:not(:disabled){background:var(--hover); border-color:var(--line2)}
+  .btn.pri{background:var(--ember); border-color:var(--ember); color:#fff}
+  .btn.pri:hover:not(:disabled){background:var(--ember-lit); border-color:var(--ember-lit)}
+  .btn.sm{padding:5px 10px; border-radius:8px; font-size:12.5px}
+  .btn.gho{background:transparent}
+  .btn.wide{width:100%}
+  .btn:disabled{opacity:.42; cursor:default}
+  .link{background:none; border:0; color:var(--ember-lit); padding:0; font-size:12.5px; cursor:pointer}
+  .link:hover{text-decoration:underline}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:15px 16px; min-width:0}
+  .card h2{margin:0 0 10px; font-size:13.5px; font-weight:650}
+  .no{font-size:10.5px; color:var(--dim); letter-spacing:.12em; text-transform:uppercase; margin:14px 0 6px}
+  .no:first-child{margin-top:0}
+  .muted{color:var(--muted); font-size:12.5px}
+  .hint{color:var(--dim); font-size:12px; margin-top:6px}
+  .hide{display:none !important}
+
+  .drop{border:1.5px dashed var(--line2); border-radius:11px; padding:14px; text-align:center; color:var(--muted);
+        font-size:13px; cursor:pointer}
+  .drop:hover,.drop.on{border-color:var(--ember); color:var(--fg); background:rgba(201,100,66,.06)}
+  .chips{display:flex; flex-direction:column; gap:6px; margin-top:8px}
+  .chip{display:flex; align-items:center; gap:8px; background:var(--elev); border:1px solid var(--line); border-radius:9px;
+        padding:7px 10px; font-size:12.5px; min-width:0}
+  .chip span{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .chip i{font-style:normal; color:var(--dim)}
+  .chip button{background:none; border:0; color:var(--dim); font-size:15px; line-height:1; padding:0 2px}
+  .chip button:hover{color:var(--bad)}
+
+  .inp,select,textarea{background:var(--field); border:1px solid var(--line); color:var(--fg); border-radius:9px;
+        padding:8px 11px; font:inherit; font-size:13px; width:100%}
+  textarea{resize:vertical; font-family:ui-monospace,"Cascadia Mono",Consolas,monospace; font-size:12.5px}
+  .inp:focus,select:focus,textarea:focus{outline:none; border-color:var(--line2)}
+  .seg{display:flex; background:var(--elev); border:1px solid var(--line); border-radius:10px; padding:3px; gap:3px}
+  .seg button{flex:1; background:none; border:0; color:var(--muted); padding:6px 8px; border-radius:7px; font-size:12.5px}
+  .seg button.on{background:var(--card); color:var(--fg); box-shadow:0 0 0 1px var(--line) inset}
+  label.ck{display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12.5px; cursor:pointer; margin:4px 0}
+  input[type=checkbox],input[type=radio]{accent-color:var(--ember); width:14px; height:14px; cursor:pointer; margin:0}
+  .act{margin-top:16px; display:flex; gap:8px}
+  .act .btn.pri{flex:1}
+
+  .status{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); flex-wrap:wrap}
+  .status .dot{display:block}
+  .note{border-radius:10px; padding:9px 12px; font-size:12.5px; margin-top:10px}
+  .note.ok{background:rgba(52,211,153,.10); color:var(--good)}
+  .note.warn{background:rgba(245,158,11,.11); color:var(--warn)}
+  .note.bad{background:rgba(248,113,113,.11); color:var(--bad)}
+  .note ul{margin:4px 0 0; padding-left:18px}
+  .code{display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:rgba(201,100,66,.12);
+        border:1px solid rgba(201,100,66,.4); border-radius:11px; padding:11px 13px; margin-top:8px}
+  .code b{font:600 18px/1 ui-monospace,Consolas,monospace; letter-spacing:.12em; color:var(--fg)}
+
+  .empty{color:var(--muted); font-size:13px; padding:28px 6px; text-align:center}
+  .runhead{display:flex; align-items:center; gap:10px}
+  .runhead b{font-size:13.5px}
+  .runhead .sp{flex:1}
+  .bar{height:6px; background:var(--elev); border-radius:6px; overflow:hidden; margin-top:12px}
+  .bar div{height:100%; background:var(--ember); width:0; transition:width .4s}
+  .barlbl{display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin-top:6px; gap:10px}
+  .barlbl span:first-child{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .spin{width:13px;height:13px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--ember);animation:sp .7s linear infinite;flex:0 0 13px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  pre{margin:8px 0 0; background:var(--console); color:var(--console-fg); border:1px solid var(--line); border-radius:11px;
+      padding:11px 13px; max-height:34vh; overflow:auto; font:12.2px/1.55 ui-monospace,"Cascadia Mono",Consolas,monospace;
+      white-space:pre-wrap; word-break:break-word}
+  details{margin-top:12px}
+  summary{cursor:pointer; color:var(--muted); font-size:12.5px; user-select:none}
+  summary:hover{color:var(--fg)}
+
+  .stats{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+  .stat{flex:1 1 120px; background:var(--elev); border:1px solid var(--line); border-radius:11px; padding:10px 13px; min-width:0}
+  .stat div{font-size:11px; color:var(--dim); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .stat b{display:block; font-size:21px; font-weight:650; margin-top:2px; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .stat b.good{color:var(--good)} .stat b.warn{color:var(--warn)} .stat b.bad{color:var(--bad)}
+  .files{display:flex; flex-direction:column; gap:8px; margin-top:12px}
+  .file{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .file .btn.pri{flex:1 1 220px; overflow:hidden; text-overflow:ellipsis; text-align:left}
+  .caption{color:var(--muted); font-size:12px; margin-top:10px}
+
+  .tbl{margin-top:16px}
+  .tblh{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+  .tblh h3{margin:0; font-size:12.5px; font-weight:650; margin-right:6px}
+  .views{display:flex; gap:4px; flex-wrap:wrap}
+  .views button{background:none; border:1px solid var(--line); color:var(--muted); border-radius:999px; padding:3px 10px; font-size:12px}
+  .views button.on{background:var(--ember); border-color:var(--ember); color:#fff}
+  .tw{overflow:auto; max-height:56vh; border:1px solid var(--line); border-radius:10px}
+  table{border-collapse:collapse; width:100%; font-size:12.5px}
+  th{position:sticky; top:0; background:var(--elev); text-align:left; font-size:10.5px; font-weight:600; color:var(--dim);
+     text-transform:uppercase; letter-spacing:.06em; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap; z-index:1}
+  td{padding:6px 10px; border-bottom:1px solid var(--line); white-space:nowrap; max-width:420px; overflow:hidden; text-overflow:ellipsis}
+  td.wrap{white-space:normal; min-width:380px; max-width:620px}
+  td.n{text-align:right; font-variant-numeric:tabular-nums}
+  tbody tr:hover td{background:var(--hover)}
+  tr:last-child td{border-bottom:0}
+  .more{color:var(--dim); font-size:12px; margin-top:6px}
+
+  .colchk td{white-space:normal}
+  .big{font-size:22px; font-weight:650}
+  .notes{background:var(--console); border:1px solid var(--line); border-radius:11px; padding:11px 13px; color:var(--console-fg);
+         font:12.5px/1.6 ui-monospace,Consolas,monospace; white-space:pre-wrap; max-height:34vh; overflow:auto}
+  #fabbox{margin-bottom:14px} #fabbox:empty{display:none} #fabbox:has(.veil){margin:0}
+  .veil{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:30; padding:16px}
+  .modal{background:var(--card); border:1px solid var(--line); border-radius:14px; width:min(560px,100%); padding:18px 20px;
+         box-shadow:0 18px 50px rgba(0,0,0,.35)}
+  .modal h2{margin:0 0 10px; font-size:15px}
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--fg); color:var(--bg);
+         padding:9px 16px; border-radius:10px; font-size:13px; z-index:50; box-shadow:0 8px 30px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand"><img id="logo" alt=""><div><b>Claim &amp; Equipment Tools</b><span>PVI Digital</span></div></div>
+  <nav id="nav"></nav>
+  <div class="side-end">
+    <div class="row">
+      <button class="btn sm gho" style="flex:1" onclick="openOut()" title="Open the folder with every result file">Output</button>
+      <button class="btn sm gho" style="flex:1" id="themeBtn" onclick="toggleTheme()">Light</button>
+    </div>
+    <button class="btn sm gho" onclick="quit()">Quit</button>
+    <div class="ver" id="ver">v...</div>
+  </div>
+</aside>
+
+<main>
+  <header><h1 id="title"></h1><div class="sp"></div><div id="hstatus" class="status"></div></header>
+  <div class="wrap" id="view"></div>
+</main>
+<input type="file" id="fpick" class="hide">
+
+<script>
+const T = new URLSearchParams(location.search).get("t") || "";
+const $ = (id) => document.getElementById(id);
+$("logo").src = $("ico").href;
+
+const NAV = [
+  ["Claims", [["map","Map Claim"],["salvage","Check Salvage"],["invoice","Check Invoice"]]],
+  ["Certificates", [["gcngen","Generate GCNBH"],["gcnsearch","Search GCNBH"]]],
+  ["Data & Reconcile", [["searchdb","Search Database"],["tgdd","Reconcile TGDĐ"]]],
+  ["", [["upd","Update"]]],
+];
+const TITLES = {}; NAV.forEach(([,it]) => it.forEach(([k,t]) => TITLES[k] = t));
+const S = {};            // per-tool form state, kept while switching tools
+let CUR = "", ENV = null, FAB = null, VER = "", UPDINFO = null;
+const JOBS = {};         // tool -> last job view {state, lines, ...}
+let dead = 0;
+
+// ------------------------------------------------------------ helpers
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function toast(msg){ const d = document.createElement("div"); d.className = "toast"; d.textContent = msg;
+  document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
+async function api(path, body){
+  const o = {headers:{"X-Token":T, "Content-Type":"application/json"}};
+  if(body !== undefined){ o.method = "POST"; o.body = JSON.stringify(body); }
+  let r;
+  try { r = await fetch(path, o); dead = 0; }
+  catch(e){ if(++dead >= 3) gone(); return {error:"offline"}; }
+  if(r.status === 403){ gone("This window is from an older start. Close it and open the tool again."); return {error:"token"}; }
+  try { return await r.json(); } catch(e){ return {error:"bad reply"}; }
+}
+function gone(msg){ document.body.innerHTML = '<div class="empty" style="margin:auto">' + esc(msg || "The tool has closed. Open it again from the shortcut.") + '</div>'; }
+function fmt(v){
+  if(v === null || v === undefined) return "";
+  if(typeof v === "number") return Number.isInteger(v) ? v.toLocaleString("vi-VN") : v.toLocaleString("vi-VN", {maximumFractionDigits:2});
+  return String(v);
+}
+function dl(path){ location.href = "/api/file?t=" + T + "&path=" + encodeURIComponent(path); }
+async function openPath(path, select){ const r = await api("/api/open", {path, select:!!select}); if(r.error) toast(r.error); }
+async function openUrl(url){ const r = await api("/api/open", {url}); if(r.error) toast(r.error); }
+function openOut(){ api("/api/open", {what:"output"}); }
+function st(tool){ return S[tool] || (S[tool] = {}); }
+
+// ------------------------------------------------------------ nav + theme
+function drawNav(){
+  let h = "";
+  NAV.forEach(([g, items]) => {
+    if(g) h += '<div class="grp-h">' + esc(g) + '</div>'; else h += '<div class="grp-h">&nbsp;</div>';
+    items.forEach(([k, t]) => {
+      const j = JOBS[k]; let dot = "";
+      if(j && j.state === "running") dot = "run";
+      else if(k === "upd" && UPDINFO && UPDINFO.available) dot = "new";
+      h += '<button id="nav-' + k + '" class="' + (k === CUR ? "on" : "") + '" onclick="go(\'' + k + '\')">' +
+           esc(t) + '<span class="dot ' + dot + '"></span></button>';
+    });
+  });
+  $("nav").innerHTML = h;
+}
+function setTheme(t){ document.documentElement.dataset.theme = t; $("themeBtn").textContent = t === "dark" ? "Light" : "Dark";
+  try { localStorage.setItem("ct_theme", t); } catch(e){} }
+function toggleTheme(){ setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"); }
+try { setTheme(localStorage.getItem("ct_theme") || "dark"); } catch(e){ setTheme("dark"); }
+
+function go(k){
+  CUR = k; try { localStorage.setItem("ct_tool", k); } catch(e){}
+  $("title").textContent = TITLES[k] || "";
+  drawNav(); draw();
+}
+function draw(){
+  const f = VIEWS[CUR]; $("hstatus").innerHTML = "";
+  $("view").innerHTML = f ? f() : "";
+  if(HEAD[CUR]) HEAD[CUR]();
+  if(AFTER[CUR]) AFTER[CUR]();
+  drawRun(CUR);
+}
+
+// ------------------------------------------------------------ file fields
+// field(tool, key, accept, multi): a drop area + chosen files; files upload at once, the run sends their ids
+function field(tool, key, accept, multi, label){
+  const s = st(tool), files = s[key] || [];
+  let h = '<div class="drop" ondragover="event.preventDefault();this.classList.add(\'on\')" ondragleave="this.classList.remove(\'on\')" ' +
+          'ondrop="dropFiles(event,\'' + tool + '\',\'' + key + '\',' + (multi ? 1 : 0) + ')" ' +
+          'onclick="pick(\'' + tool + '\',\'' + key + '\',\'' + accept + '\',' + (multi ? 1 : 0) + ')">' +
+          esc(label || (multi ? "Drop files here or click to choose" : "Drop a file here or click to choose")) + '</div>';
+  if(files.length){
+    h += '<div class="chips">' + files.map((f, i) => '<div class="chip"><span title="' + esc(f.name) + '">' + esc(f.name) +
+         '</span><i>' + (f.up ? "uploading..." : Math.max(1, Math.round(f.size/1024)).toLocaleString() + " KB") +
+         '</i><button title="Remove" onclick="unpick(\'' + tool + '\',\'' + key + '\',' + i + ')">×</button></div>').join("") + '</div>';
+  }
+  return h;
+}
+function pick(tool, key, accept, multi){
+  const fp = $("fpick"); fp.value = ""; fp.accept = accept; fp.multiple = !!multi;
+  fp.onchange = () => addFiles(tool, key, [...fp.files], multi);
+  fp.click();
+}
+function dropFiles(ev, tool, key, multi){ ev.preventDefault(); ev.currentTarget.classList.remove("on");
+  addFiles(tool, key, [...ev.dataTransfer.files], multi); }
+async function addFiles(tool, key, list, multi){
+  if(!list.length) return;
+  const s = st(tool);
+  if(!multi){ list = list.slice(0, 1); s[key] = []; }
+  s[key] = s[key] || [];
+  const items = list.map(f => ({name:f.name, size:f.size, up:true}));
+  s[key].push(...items);
+  if(CUR === tool) draw();
+  for(let i = 0; i < list.length; i++){
+    let r;
+    try {
+      const res = await fetch("/api/upload?t=" + T + "&name=" + encodeURIComponent(list[i].name), {method:"POST", body:list[i]});
+      r = await res.json();
+    } catch(e){ r = {error:"upload failed"}; }
+    if(r.error){ toast(list[i].name + ": " + r.error); s[key] = s[key].filter(x => x !== items[i]); }
+    else { items[i].id = r.id; items[i].up = false; }
+  }
+  if(ONFILE[tool]) await ONFILE[tool](key);
+  if(CUR === tool) draw();
+}
+function unpick(tool, key, i){ const s = st(tool); s[key].splice(i, 1); if(ONFILE[tool]) ONFILE[tool](key, true); draw(); }
+function ready(tool, key){ const f = st(tool)[key] || []; return f.length && f.every(x => x.id); }
+function ids(tool, key){ return (st(tool)[key] || []).map(x => x.id); }
+function seg(tool, key, opts, onchg){
+  const v = st(tool)[key];
+  return '<div class="seg">' + opts.map(([k, t]) => '<button class="' + (v === k ? "on" : "") + '" onclick="S[\'' + tool +
+         '\'][\'' + key + '\']=\'' + k + '\';' + (onchg || "") + 'draw()">' + esc(t) + '</button>').join("") + '</div>';
+}
+function tmplLink(name, label){ return '<button class="link" onclick="location.href=\'/api/template?t=' + T + '&name=' + name + '\'">' + esc(label) + '</button>'; }
+
+// ------------------------------------------------------------ run + result panel
+async function run(tool, args, label){
+  const r = await api("/api/run", {tool, args, label});
+  if(r.error){ toast(r.error); return; }
+  JOBS[tool] = {state:"running", lines:[], total:0, progress:null, label, result:null};
+  drawNav(); if(CUR === tool || panelFor(CUR).includes(tool)) draw(); else drawRun(CUR); poll();
+  const box = $("run-" + tool); if(box) box.scrollIntoView({block:"nearest", behavior:"smooth"});
+}
+async function stopJob(tool){ await api("/api/stop", {tool}); toast(tool === "invoice" ? "Stopping, keeping what is done..." : "Stopped"); }
+let polling = null;
+function poll(){
+  if(polling) return;
+  polling = setInterval(async () => {
+    const live = Object.keys(JOBS).filter(t => JOBS[t].state === "running");
+    if(!live.length){ clearInterval(polling); polling = null; return; }
+    for(const t of live){
+      const j = JOBS[t];
+      const r = await api("/api/job?tool=" + t + "&since=" + (j.total || 0));
+      if(!r.job) continue;
+      const v = r.job;
+      j.lines = (j.lines || []).concat(v.lines); j.total = v.total;
+      Object.assign(j, {state:v.state, progress:v.progress, code:v.code, error:v.error, result:v.result, dir:v.dir, elapsed:v.elapsed});
+      if(v.state !== "running"){ drawNav(); if(DONE[t]) DONE[t](j); if(t === CUR || panelFor(CUR).includes(t)){ draw(); continue; } }
+      if(t === CUR || (t === "signin" && (CUR === "map" || CUR === "searchdb")) || (t === "odbc" && (CUR === "map" || CUR === "searchdb"))
+         || (t === "gcnprint" && CUR === "gcnsearch")) drawRun(CUR);
+    }
+  }, 700);
+}
+function panelFor(tool){ return tool === "gcnsearch" ? ["gcnsearch", "gcnprint"] : tool === "upd" ? ["update"] : [tool]; }
+function drawRun(tool){
+  if(HEAD[tool]) HEAD[tool]();
+  panelFor(tool).forEach(t => {
+    const box = $("run-" + t); if(!box) return;
+    const j = JOBS[t];
+    if(!j){ box.innerHTML = t === "gcnprint" ? "" : '<div class="empty">' + esc(EMPTY[t] || "Results show here.") + '</div>'; return; }
+    box.innerHTML = t === "gcnprint" ? '<div class="card">' + runHtml(t, j) + '</div>' : runHtml(t, j);
+  });
+}
+function runHtml(t, j){
+  let h = "";
+  if(j.state === "running"){
+    const p = j.progress, pct = p && p.total ? Math.round(100 * p.done / p.total) : 0;
+    h += '<div class="runhead"><span class="spin"></span><b>' + esc(j.label) + '</b><span class="muted">' + esc(secs(j.elapsed)) + '</span><div class="sp"></div>' +
+         '<button class="btn sm gho" onclick="stopJob(\'' + t + '\')">Stop</button></div>';
+    if(p){ h += '<div class="bar"><div style="width:' + pct + '%"></div></div><div class="barlbl"><span>' + esc(p.label) + '</span><span>' +
+         p.done + '/' + p.total + '</span></div>'; }
+    else if(j.lines && j.lines.length){ h += '<div class="caption">' + esc(j.lines[j.lines.length - 1]) + '</div>'; }
+    h += det("log-" + t, "Log", '<pre>' + esc((j.lines || []).join("\n")) + '</pre>');
+    return h;
+  }
+  if(j.state === "failed" || j.state === "stopped"){
+    h += '<div class="runhead"><b>' + esc(j.label) + '</b><div class="sp"></div><span class="muted">' + esc(secs(j.elapsed)) + '</span></div>';
+    h += '<div class="note bad">' + esc(j.state === "stopped" ? "Stopped." : (j.error || "The run failed.")) + '</div>';
+    if(j.result && j.result.trace) h += det("tr-" + t, "Technical detail", '<pre>' + esc(j.result.trace) + '</pre>');
+    h += det("log-" + t, "Log", '<pre>' + esc((j.lines || []).join("\n")) + '</pre>');
+    return h;
+  }
+  return '<div class="runhead"><b>' + esc(j.label) + '</b><div class="sp"></div><span class="muted">Done in ' + esc(secs(j.elapsed)) + '</span></div>' +
+         resultHtml(t, j.result || {}, j) + det("log-" + t, "Log", '<pre>' + esc((j.lines || []).join("\n")) + '</pre>');
+}
+const OPEN = {};
+function det(k, summary, body){
+  return '<details data-k="' + k + '" ontoggle="OPEN[this.dataset.k]=this.open" ' + (OPEN[k] ? "open" : "") + '><summary>' + summary + '</summary>' + body + '</details>';
+}
+function secs(s){ if(s === undefined) return ""; s = +s; return s < 60 ? s + " s" : Math.floor(s/60) + " min " + (s % 60) + " s"; }
+function resultHtml(t, r, j){
+  let h = "";
+  if(r.stats && r.stats.length) h += '<div class="stats">' + r.stats.map(s => '<div class="stat"><div title="' + esc(s.label) + '">' + esc(s.label) +
+       '</div><b class="' + esc(s.tone || "") + '" title="' + esc(fmt(s.value)) + '">' + esc(fmt(s.value)) + '</b></div>').join("") + '</div>';
+  if(r.warns && r.warns.length) h += '<div class="note warn"><b>' + r.warns.length + ' warning' + (r.warns.length > 1 ? "s" : "") + '</b><ul>' +
+       r.warns.map(w => '<li>' + esc(w) + '</li>').join("") + '</ul></div>';
+  if(r.files && r.files.length){
+    h += '<div class="files">' + r.files.map(f => '<div class="file"><button class="btn pri" onclick="dl(' + esc(JSON.stringify(f.path)) + ')" title="Save a copy to Downloads">Download ' + esc(f.name) +
+         '</button><button class="btn" onclick="openPath(' + esc(JSON.stringify(f.path)) + ')">Open</button><button class="btn gho" onclick="openPath(' +
+         esc(JSON.stringify(f.path)) + ',1)" title="Show the file in its folder">Folder</button></div>').join("") + '</div>';
+  }
+  if(r.notes && r.notes.length) h += '<div class="caption">' + r.notes.map(esc).join(" · ") + '</div>';
+  if(EXTRA[t]) h += EXTRA[t](r, j);
+  (r.tables || []).forEach((tb, i) => h += tableHtml(t, i, tb));
+  if(r.details) h += det("det-" + t, "Details", '<pre>' + esc(r.details) + '</pre>');
+  return h;
+}
+const TV = {};   // table view state: key -> {view, main}
+function tableHtml(t, i, tb){
+  const key = t + ":" + i, s = TV[key] || (TV[key] = {view:0, main:false});
+  let idx = tb.rows.map((_, k) => k);
+  if(tb.views && tb.views[s.view]) idx = tb.views[s.view].rows;
+  let cols = tb.cols.map((c, k) => k);
+  if(tb.main && s.main) cols = tb.main;
+  const LIM = 400, shown = idx.slice(0, LIM);
+  let h = '<div class="tbl"><div class="tblh"><h3>' + esc(tb.title) + '</h3>';
+  if(tb.views) h += '<div class="views">' + tb.views.map((v, k) => '<button class="' + (k === s.view ? "on" : "") + '" onclick="TV[\'' + key +
+       '\'].view=' + k + ';drawRun(CUR)">' + esc(v.label) + '</button>').join("") + '</div>';
+  if(tb.main) h += '<label class="ck" style="margin-left:auto"><input type="checkbox" ' + (s.main ? "checked" : "") + ' onchange="TV[\'' + key +
+       '\'].main=this.checked;drawRun(CUR)">Main columns only</label>';
+  h += '</div>';
+  if(!shown.length) return h + '<div class="muted">No rows here.</div></div>';
+  const links = new Set(tb.links || []);
+  h += '<div class="tw"><table><thead><tr>' + cols.map(c => '<th>' + esc(tb.cols[c]) + '</th>').join("") + '</tr></thead><tbody>';
+  shown.forEach(k => {
+    const row = tb.rows[k];
+    h += '<tr>' + cols.map(c => {
+      const v = row[c], name = tb.cols[c];
+      if(links.has(name)) return '<td>' + (v ? '<button class="link" onclick="openUrl(' + esc(JSON.stringify(v)) + ')">Open</button>' : "") + '</td>';
+      const long = /Lưu ý|Ghi chú|Note/i.test(name);
+      return '<td class="' + (typeof v === "number" ? "n" : long ? "wrap" : "") + '" title="' + esc(fmt(v)) + '">' + esc(fmt(v)) + '</td>';
+    }).join("") + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  const total = tb.views && tb.views[s.view] ? idx.length : tb.total;
+  if(total > shown.length) h += '<div class="more">Showing ' + shown.length + ' of ' + total.toLocaleString() + ' rows. The file has all of them.</div>';
+  return h + '</div>';
+}
+
+// ------------------------------------------------------------ Fabric (Map Claim, Search Database)
+async function loadFabric(force){
+  FAB = await api("/api/fabric" + (force ? "?force=1" : ""));
+  if(CUR === "map" || CUR === "searchdb") draw();
+}
+function fabricHead(){
+  const j = JOBS.signin, o = JOBS.odbc;
+  let h;
+  if(!FAB) h = '<span class="spin"></span>Checking Fabric...';
+  else if(!FAB.odbc) h = '<span class="dot bad"></span>Database driver missing <button class="btn sm" onclick="run(\'odbc\',{},\'Get database driver\')" ' +
+       (o && o.state === "running" ? "disabled" : "") + '>Get driver</button>';
+  else if(FAB.signed) h = '<span class="dot ok"></span>Fabric ready · ' + esc(FAB.who) + ' <button class="btn sm gho" onclick="signin()" title="Sign in with another account">Switch</button>';
+  else h = '<span class="dot bad"></span>Not signed in to Fabric <button class="btn sm pri" onclick="signin()">Sign in</button>';
+  $("hstatus").innerHTML = h;
+  const box = $("fabbox"); if(!box) return;
+  let b = "";
+  if(j && j.state === "running"){
+    b = '<div class="veil"><div class="modal"><h2>Sign in to Fabric</h2>';
+    if(j.code) b += '<div class="muted">Open the Microsoft page, enter this code, then sign in with your PVI account.</div><div class="code"><b>' + esc(j.code.code) +
+        '</b><div style="flex:1"></div><button class="btn sm" onclick="copyCode()">Copy code</button><button class="btn sm pri" onclick="openUrl(' +
+        esc(JSON.stringify(j.code.url)) + ')">Open sign-in page</button></div><div class="hint">This window moves on by itself once you are signed in.</div>';
+    else b += '<div class="status"><span class="spin"></span>Getting a sign-in code...</div>';
+    b += '<div class="act" style="justify-content:flex-end"><button class="btn sm gho" onclick="stopJob(\'signin\')">Cancel</button></div></div></div>';
+  } else if(j && j.state === "failed"){
+    b = '<div class="note bad">Sign-in failed: ' + esc(j.error) + '</div>';
+  } else if(o && o.state === "running"){
+    b = '<div class="card"><div class="status"><span class="spin"></span>Getting the database driver...</div></div>';
+  } else if(o && o.state === "failed"){
+    b = '<div class="note bad">' + esc(o.error) + '</div>';
+  }
+  box.innerHTML = b;
+}
+function signin(){ run("signin", {}, "Fabric sign-in"); }
+function copyCode(){ const j = JOBS.signin; if(j && j.code){ navigator.clipboard.writeText(j.code.code); toast("Code copied"); } }
+function fabOk(){ return FAB && FAB.odbc && FAB.signed; }
+
+// ------------------------------------------------------------ tools
+const VIEWS = {}, HEAD = {}, AFTER = {}, ONFILE = {}, DONE = {}, EXTRA = {}, EMPTY = {};
+DONE.signin = () => loadFabric(true);
+DONE.odbc = () => loadFabric(true);
+
+// ---- Map Claim
+EMPTY.map = "Add a claim file, pick the sheet and the product, then Map claims. You get the same file back with the Policy / RI columns and the Pias sheet added.";
+VIEWS.map = () => {
+  const s = st("map"); s.product = s.product ?? 0;
+  let h = '<div id="fabbox"></div><div class="cols"><div class="card"><div class="no">Claim file</div>' +
+          field("map", "file", ".xlsx", false) + '<div class="hint">' + tmplLink("claim", "Template & column guide") + '</div>';
+  if(s.inspecting) h += '<div class="status" style="margin-top:10px"><span class="spin"></span>Reading the file...</div>';
+  if(s.insp && s.insp.error) h += '<div class="note bad">' + esc(s.insp.error) + '</div>';
+  const sh = s.insp && s.insp.sheets;
+  if(sh && !sh.length) h += '<div class="note bad">No mappable sheet. It needs a bảng kê (headers Số yêu cầu + IMEI/Serial) or an English Data sheet.</div>';
+  if(sh && sh.length){
+    s.sheet = Math.min(s.sheet || 0, sh.length - 1);
+    const lbl = c => c.sheet + (c.kind === "bangke" ? " · bảng kê, " + c.n + " rows" : " · Data (English)");
+    h += '<div class="no">Sheet</div><select onchange="S.map.sheet=+this.value;draw()">' + sh.map((c, i) => '<option value="' + i + '" ' +
+         (i === s.sheet ? "selected" : "") + '>' + esc(lbl(c)) + '</option>').join("") + '</select>';
+    const c = sh[s.sheet], miss = c.cols.filter(x => !x.found), tot = c.cols.length;
+    if(tot){
+      h += miss.length ? '<div class="note warn">Reads ' + (tot - miss.length) + '/' + tot + ' columns. Missing: ' + esc(miss.map(x => x.label).join(", ")) + '. It still runs, check the details first.</div>'
+                       : '<div class="note ok">Reads all ' + tot + '/' + tot + ' columns.</div>';
+      if(c.kind === "data") h += '<div class="hint">Read as an English Data sheet (no Số yêu cầu column), so no Pias sheet is made.</div>';
+      h += det("colchk", "Column details", '<div class="tw" style="margin-top:8px"><table class="colchk"><thead><tr><th></th><th>Column</th><th>In the file</th><th>If missing</th></tr></thead><tbody>' +
+           c.cols.map(x => '<tr><td>' + (x.found ? '<span class="dot ok" style="display:inline-block"></span>' : '<span class="dot bad" style="display:inline-block"></span>') + '</td><td>' + esc(x.label) +
+           '</td><td>' + esc(x.found || "not found") + '</td><td>' + esc(x.lost) + '</td></tr>').join("") + '</tbody></table></div>');
+    }
+    h += '<div class="no">Product of this batch</div><select onchange="S.map.product=+this.value">' + s.insp.products.map((p, i) => '<option value="' + i + '" ' +
+         (i === s.product ? "selected" : "") + '>' + esc(p) + '</option>').join("") + '</select>' +
+         '<div class="hint">Keeps the match inside this product, so an EW policy of the same device is not picked by mistake.</div>';
+  }
+  const can = sh && sh.length && fabOk() && !(JOBS.map && JOBS.map.state === "running");
+  h += '<div class="act"><button class="btn pri" ' + (can ? "" : "disabled") + ' onclick="runMap()">Map claims</button></div>';
+  if(sh && sh.length && FAB && !fabOk()) h += '<div class="hint">Sign in to Fabric first (top right).</div>';
+  return h + '</div><div class="card" id="run-map"></div></div>';
+};
+HEAD.map = fabricHead;
+ONFILE.map = async (key, removed) => {
+  const s = st("map"); s.insp = null; s.sheet = 0;
+  if(removed || !ready("map", "file")) return;
+  s.inspecting = true; draw();
+  s.insp = await api("/api/inspect", {kind:"map", id:ids("map", "file")[0]});
+  s.inspecting = false;
+};
+function runMap(){
+  const s = st("map"), c = s.insp.sheets[s.sheet];
+  run("map", {file:ids("map", "file")[0], sheet:c.sheet, kind:c.kind, hr:c.hr, product:s.product}, "Map Claim");
+}
+
+// ---- Check Salvage
+EMPTY.salvage = "Add the file, then run. Rate cards come from rate_source.xlsm inside the tool.";
+VIEWS.salvage = () => {
+  const s = st("salvage"); s.mode = s.mode || "celebi";
+  const cel = s.mode === "celebi";
+  return '<div class="cols"><div class="card"><div class="no">Mode</div>' +
+    seg("salvage", "mode", [["celebi", "Celebi · BBDS reconcile"], ["eco", "Ecoswap · phone pricing"]]) +
+    '<div class="no">' + (cel ? "BBDS file (sheet BBDS)" : "Phone list (sheet DT)") + '</div>' + field("salvage", "file", ".xlsx,.xlsm,.xls", false) +
+    '<div class="hint">' + (cel ? "The monthly reconciliation file from Celebi." : "Sheet DT: Model, IMEI, Sum Insured, Giá KH mua, GSC phân loại, purchase date, GS sent date.") + '</div>' +
+    (ENV && !ENV.rates ? '<div class="note bad">rate_source.xlsm is missing in app\\data.</div>' : "") +
+    '<div class="act"><button class="btn pri" ' + (ready("salvage", "file") && !(JOBS.salvage && JOBS.salvage.state === "running") ? "" : "disabled") +
+    ' onclick="run(\'salvage\',{mode:S.salvage.mode,file:ids(\'salvage\',\'file\')[0]},S.salvage.mode===\'eco\'?\'Ecoswap vs Celebi pricing\':\'Celebi reconcile\')">' +
+    (cel ? "Reconcile" : "Price Eco vs Celebi") + '</button></div></div><div class="card" id="run-salvage"></div></div>';
+};
+
+// ---- Check Invoice
+EMPTY.invoice = "Add the device list, pick a speed, then Start. KHỚP = declared price matches the invoice, LỆCH = check again, KHÔNG TRA ĐƯỢC = check by hand.";
+VIEWS.invoice = () => {
+  const s = st("invoice"); s.speed = s.speed || "Light";
+  return '<div class="cols"><div class="card"><div class="no">Device list</div>' + field("invoice", "file", ".xlsx,.xlsm,.xls,.csv", false) +
+    '<div class="hint">Columns: IMEI/Serial · SĐT · Số HĐ · Giá KH mua · Model. ' + tmplLink("invoice", "Template") + '</div>' +
+    '<div class="no">Speed</div>' + seg("invoice", "speed", [["Light", "Light"], ["Balanced", "Balanced"], ["Fast", "Fast"]]) +
+    '<div class="hint">Light = 3 lookups at a time, least likely to be blocked by TGDĐ.</div>' +
+    '<div class="act"><button class="btn pri" ' + (ready("invoice", "file") && !(JOBS.invoice && JOBS.invoice.state === "running") ? "" : "disabled") +
+    ' onclick="run(\'invoice\',{file:ids(\'invoice\',\'file\')[0],speed:S.invoice.speed},\'Check Invoice\')">Start</button></div></div><div class="card" id="run-invoice"></div></div>';
+};
+
+// ---- Generate GCNBH
+EMPTY.gcngen = "Add the Excel file from PIAS, then Generate. A sheet named with GCN gives original certificates, with SĐBS gives endorsements.";
+VIEWS.gcngen = () => {
+  const s = st("gcngen"), word = ENV && ENV.word, tp = (ENV && ENV.gcn_templates) || {};
+  if(s.pdf === undefined && ENV) s.pdf = !!word;
+  return '<div class="cols"><div class="card"><div class="no">Excel file from PIAS</div>' + field("gcngen", "file", ".xlsx,.xlsm,.xls", false) +
+    '<div class="hint">The product code is in the sheet name, for example GCN gốc BHMR.</div><div class="no">Options</div>' +
+    '<label class="ck"><input type="checkbox" ' + (s.pdf ? "checked" : "") + ' ' + (word ? "" : "disabled") + ' onchange="S.gcngen.pdf=this.checked">Merged file as PDF (uses Word)</label>' +
+    (ENV && !word ? '<div class="hint">Word is not installed on this PC, the merged file stays .docx.</div>' : "") +
+    det("tpl", "Word templates (" + ((tp.products || []).length) + " products)", '<div class="muted" style="margin-top:6px">' +
+    esc((tp.products || []).join(", ")) + (tp.sdbs ? " · SĐBS" : " · no SĐBS template") + (tp.error ? esc(tp.error) : "") + '</div>') +
+    '<div class="act"><button class="btn pri" ' + (ready("gcngen", "file") && !(JOBS.gcngen && JOBS.gcngen.state === "running") ? "" : "disabled") +
+    ' onclick="run(\'gcngen\',{file:ids(\'gcngen\',\'file\')[0],pdf:!!S.gcngen.pdf},\'Generate GCNBH\')">Generate</button></div></div><div class="card" id="run-gcngen"></div></div>';
+};
+
+// ---- Search GCNBH
+EMPTY.gcnsearch = "Add a claim file (any file with policy numbers like 25/45/09/KHAC/P000123) or paste numbers, then Search.";
+const GCN_PROD = [["Tự nhận theo file", "Auto (from the file)"], ["Tất cả sản phẩm", "All products"], ["1D1"], ["BHMR"], ["BHRV"], ["NVMH"], ["MDM"], ["ADLD"], ["BHNC"]];
+VIEWS.gcnsearch = () => {
+  const s = st("gcnsearch"); s.product = s.product || GCN_PROD[0][0]; s.text = s.text || "";
+  const g = ENV && ENV.gcn;
+  let h = '<div class="cols"><div class="stack"><div class="card"><div class="no">Claim file (optional)</div>' + field("gcnsearch", "file", ".xlsx,.xlsm", false);
+  if(s.sheets && s.sheets.length){
+    h += '<div class="no">Sheets to read</div>' + s.sheets.map((x, i) => '<label class="ck"><input type="checkbox" ' + (x.on ? "checked" : "") +
+         ' onchange="S.gcnsearch.sheets[' + i + '].on=this.checked;draw()">' + esc(x.sheet) + ' <span style="color:var(--dim)">(' + x.n + ' policies)</span></label>').join("");
+  }
+  h += '<div class="no">Or paste policy numbers</div><textarea rows="4" placeholder="25/45/09/KHAC/P000158&#10;26/45/09/KHAC/P000380/E02" oninput="S.gcnsearch.text=this.value;canGcn()">' + esc(s.text) + '</textarea>' +
+       '<div class="no">Product of the claims</div><select onchange="S.gcnsearch.product=this.value">' + GCN_PROD.map(([v, l]) => '<option value="' + esc(v) + '" ' +
+       (v === s.product ? "selected" : "") + '>' + esc(l || v) + '</option>').join("") + '</select>' +
+       '<div class="hint">One policy number can have certificates of several products. Auto reads the Product column, else the file name.</div>' +
+       '<div class="act"><button class="btn pri" id="b-gcn" onclick="runGcn()">Search</button></div></div></div>' +
+       '<div class="stack"><div class="card" id="run-gcnsearch"></div><div id="run-gcnprint"></div></div></div>';
+  return h;
+};
+HEAD.gcnsearch = () => {
+  const g = ENV && ENV.gcn;
+  $("hstatus").innerHTML = !ENV ? "" : g.path ? '<span class="dot ok"></span>OneDrive folder found' :
+    '<span class="dot bad"></span>OneDrive folder "' + esc(g.name || "GCNBH + XMP - TGDĐ") + '" not on this PC';
+};
+AFTER.gcnsearch = () => canGcn();
+function canGcn(){
+  const s = st("gcnsearch"), b = $("b-gcn"); if(!b) return;
+  const fileOk = ready("gcnsearch", "file") && (s.sheets || []).some(x => x.on);
+  b.disabled = !(ENV && ENV.gcn.path) || !(fileOk || (s.text || "").trim()) || (JOBS.gcnsearch && JOBS.gcnsearch.state === "running");
+}
+ONFILE.gcnsearch = async (key, removed) => {
+  const s = st("gcnsearch"); s.sheets = null;
+  if(removed || !ready("gcnsearch", "file")) return;
+  const r = await api("/api/inspect", {kind:"gcnsheets", id:ids("gcnsearch", "file")[0]});
+  if(r.error){ toast(r.error); return; }
+  s.sheets = r.sheets.map(x => ({...x, on: x.n > 0}));
+};
+function runGcn(){
+  const s = st("gcnsearch"), f = ids("gcnsearch", "file")[0];
+  const sheets = f ? (s.sheets || []).filter(x => x.on).map(x => x.sheet) : null;
+  delete JOBS.gcnprint;
+  run("gcnsearch", {file: f && sheets.length ? f : "", sheets, text:s.text || "", product:s.product}, "Search GCNBH");
+}
+EXTRA.gcnsearch = (r, j) => {
+  if(!r.found) return "";
+  const s = st("gcnsearch"); s.xmp = s.xmp ?? true; s.pages = s.pages || 30;
+  const busy = JOBS.gcnprint && JOBS.gcnprint.state === "running";
+  return '<div class="card" style="margin-top:14px;background:var(--elev)"><h2>Print</h2><label class="ck"><input type="checkbox" ' + (s.xmp ? "checked" : "") +
+    ' onchange="S.gcnsearch.xmp=this.checked">Include XMP (each XMP once, right after the first certificate using it)</label>' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span class="muted">Max pages per PDF</span><input class="inp" type="number" min="1" max="1000" step="10" style="width:90px" value="' +
+    s.pages + '" onchange="S.gcnsearch.pages=+this.value"></div>' +
+    '<div class="act"><button class="btn pri" ' + (busy ? "disabled" : "") + ' onclick="runPrint(' + esc(JSON.stringify(j.dir)) + ')">Merge ' + r.found +
+    ' found certificates into PDF</button></div><div class="hint">Only rows with exactly one certificate (Tìm thấy). Open the others from their links.</div></div>';
+};
+function runPrint(dir){ const s = st("gcnsearch"); run("gcnprint", {search_dir:dir, xmp:s.xmp, pages:s.pages}, "Merge certificates to PDF"); }
+
+// ---- Search Database
+EMPTY.searchdb = "Type IMEI, phone, policy number or request ID on the left, then Search. Returns every premium row that matches, cancellations and /E versions included.";
+VIEWS.searchdb = () => {
+  const s = st("searchdb"); s.mode = s.mode || "auto"; s.top = s.top || 5000; s.text = s.text || "";
+  const hint = {auto:"A value with / is a policy number; the rest go IMEI, then request ID, then phone, the same order as Map Claim.",
+                policy:"Prefix match: 25/45/09/KHAC/P000028 also returns /E01, /E02.", phone:"Matches the last 9 digits.", serial:"", req:""}[s.mode];
+  return '<div id="fabbox"></div><div class="cols"><div class="card"><div class="no">Search by</div>' +
+    seg("searchdb", "mode", [["auto", "Auto"], ["serial", "IMEI"], ["phone", "Phone"], ["policy", "Policy"], ["req", "Request ID"]]) +
+    (hint ? '<div class="hint">' + esc(hint) + '</div>' : "") +
+    '<div class="no">Values, one per line</div><textarea rows="8" placeholder="351954790151594&#10;0356968607&#10;25/45/09/KHAC/P000028" oninput="S.searchdb.text=this.value;canDb()">' + esc(s.text) + '</textarea>' +
+    '<div class="hint" id="dbcount"></div>' +
+    '<div class="no">Row limit</div><input class="inp" type="number" min="500" max="50000" step="500" value="' + s.top + '" onchange="S.searchdb.top=+this.value" style="width:130px">' +
+    '<div class="hint">A merged policy number can have over 12,000 premium rows. Raise the limit if the result is cut.</div>' +
+    '<div class="act"><button class="btn pri" id="b-db" onclick="run(\'searchdb\',{mode:S.searchdb.mode,text:S.searchdb.text,top:S.searchdb.top},\'Search Database\')">Search</button></div>' +
+    '</div><div class="card" id="run-searchdb"></div></div>';
+};
+HEAD.searchdb = fabricHead;
+AFTER.searchdb = () => canDb();
+function canDb(){
+  const s = st("searchdb"), n = new Set((s.text || "").split(/[\n,;\t]+/).map(x => x.trim()).filter(Boolean)).size;
+  if($("dbcount")) $("dbcount").textContent = n ? n + " value" + (n > 1 ? "s" : "") + (n > 500 ? ", only the first 500 are looked up" : "") : "";
+  if($("b-db")) $("b-db").disabled = !n || !fabOk() || (JOBS.searchdb && JOBS.searchdb.state === "running");
+}
+
+// ---- Reconcile TGDD
+EMPTY.tgdd = "Weekly: the week's PIAS or PVI Connect file gives the discounted-fee file. Monthly: the weekly result files against the ĐMX file.";
+VIEWS.tgdd = () => {
+  const s = st("tgdd"); s.mode = s.mode || "weekly";
+  const prods = (s.rulesProducts || (ENV && ENV.rules_products) || []);
+  if(!s.product || !prods.includes(s.product)) s.product = prods.includes("BHMR") ? "BHMR" : prods[0];
+  let h = '<div class="cols"><div class="card"><div class="no">Job</div>' + seg("tgdd", "mode", [["weekly", "Weekly · discounted fee"], ["monthly", "Monthly · vs ĐMX"]]);
+  if(s.mode === "weekly"){
+    h += '<div class="no">Week data file</div>' + field("tgdd", "week", ".xlsx,.xlsm,.xls", false) + '<div class="hint">PIAS or PVI Connect export, the tool tells which.</div>' +
+         '<div class="no">Product</div><select onchange="S.tgdd.product=this.value">' + prods.map(p => '<option ' + (p === s.product ? "selected" : "") + '>' + esc(p) + '</option>').join("") + '</select>';
+  } else {
+    h += '<div class="no">Weekly result files of the month</div>' + field("tgdd", "weekly", ".xlsx", true) +
+         '<div class="no">ĐMX file (sheets BÁN and HỦY)</div>' + field("tgdd", "dmx", ".xlsx,.xlsm,.xls", false);
+  }
+  if(ready("tgdd", "rules")) OPEN.rules = true;
+  h += det("rules", "Rules file", '<div class="hint" style="margin-top:6px">' + tmplLink("rules", "Download the rules in use") +
+       '. To try another one for this run only, add it here.</div><div style="margin-top:8px">' + field("tgdd", "rules", ".xlsx", false, "Use another rules file (optional)") + '</div>');
+  const can = !(JOBS.tgdd && JOBS.tgdd.state === "running") && (s.mode === "weekly" ? ready("tgdd", "week") && s.product : ready("tgdd", "weekly") && ready("tgdd", "dmx"));
+  h += '<div class="act"><button class="btn pri" ' + (can ? "" : "disabled") + ' onclick="runTgdd()">' + (s.mode === "weekly" ? "Compute discounted fee" : "Reconcile month") +
+       '</button></div></div><div class="card" id="run-tgdd"></div></div>';
+  return h;
+};
+ONFILE.tgdd = async (key, removed) => {
+  if(key !== "rules") return;
+  const s = st("tgdd"); s.rulesProducts = null;
+  if(removed || !ready("tgdd", "rules")) return;
+  const r = await api("/api/inspect", {kind:"rules", id:ids("tgdd", "rules")[0]});
+  if(r.error){ toast(r.error); s.rules = []; return; }
+  s.rulesProducts = r.products;
+};
+function runTgdd(){
+  const s = st("tgdd"), rules = ids("tgdd", "rules")[0] || "";
+  if(s.mode === "weekly") run("tgdd", {mode:"weekly", file:ids("tgdd", "week")[0], product:s.product, rules}, "Weekly discounted fee");
+  else run("tgdd", {mode:"monthly", weekly:ids("tgdd", "weekly"), dmx:ids("tgdd", "dmx")[0], rules}, "Monthly reconcile");
+}
+
+// ---- Update
+VIEWS.upd = () => {
+  const u = UPDINFO;
+  let msg = "Checking...", btn = false;
+  if(u){
+    if(!u.configured) msg = "Updates are not set up in this copy (app\\update.json has no repo).";
+    else if(u.error) msg = "Cannot check: " + u.error + ".";
+    else if(u.available){ msg = "Version " + u.latest + " is available."; btn = true; }
+    else msg = "This is the latest version.";
+  }
+  const j = JOBS.update, done = j && j.state === "done";
+  return '<div class="stack" style="max-width:760px"><div class="card"><div style="display:flex;align-items:center;gap:14px"><div><div class="no">Version in use</div><div class="big">' +
+    esc(VER) + '</div></div><div style="flex:1"></div><button class="btn sm" onclick="checkUpd(true)">Check for updates</button></div>' +
+    '<p class="muted" style="margin:12px 0 0">' + esc(msg) + '</p><div class="act">' +
+    (btn && !done ? '<button class="btn pri" onclick="run(\'update\',{},\'Update\')" style="flex:0 0 auto">Download and install</button>' : "") +
+    (done ? '<button class="btn pri" style="flex:0 0 auto" onclick="restart()">Restart the tool</button>' : "") + '</div></div>' +
+    (u && u.notes ? '<div class="card"><h2>What is new</h2><div class="notes">' + esc(u.notes) + '</div></div>' : "") +
+    '<div class="card"><h2>Install from a zip file</h2><p class="muted" style="margin:0">When this PC cannot reach GitHub.</p><div style="display:flex;gap:8px;margin-top:10px">' +
+    '<input class="inp" id="zipPath" placeholder="C:\\Users\\...\\Downloads\\claim-tools-main.zip"><button class="btn" onclick="runZip()">Install</button></div></div>' +
+    '<div class="card" id="run-update"></div></div>';
+};
+async function checkUpd(force){
+  if(force){ UPDINFO = null; if(CUR === "upd") draw(); }
+  UPDINFO = await api("/api/update/check"); drawNav(); if(CUR === "upd") draw();
+}
+function runZip(){ const p = $("zipPath").value.trim(); if(!p) return; api("/api/run", {tool:"update", mode:"local", zip:p}).then(r => {
+  if(r.error){ toast(r.error); return; } JOBS.update = {state:"running", lines:[], total:0, label:"Update"}; poll(); draw(); }); }
+DONE.update = () => { if(CUR === "upd") draw(); };
+EMPTY.update = "";
+async function restart(){ await api("/api/restart", {}); gone("Restarting..."); }
+async function quit(){
+  if(Object.values(JOBS).some(j => j.state === "running") && !confirm("A tool is still running. Quit and stop it?")) return;
+  await api("/api/quit", {}); gone("The tool is closed.");
+}
+
+// ------------------------------------------------------------ start
+async function init(){
+  api("/api/ping", {});
+  const s = await api("/api/state");
+  if(s.error) return;
+  VER = s.version; $("ver").textContent = "v" + VER; UPDINFO = s.update;
+  for(const t of Object.keys(s.jobs || {})){
+    const r = await api("/api/job?tool=" + t + "&since=0");
+    if(r.job){ const v = r.job; JOBS[t] = {...v, lines:v.lines, total:v.total}; }
+  }
+  let start = "map"; try { start = localStorage.getItem("ct_tool") || "map"; } catch(e){}
+  go(VIEWS[start] ? start : "map");
+  poll();
+  api("/api/env").then(e => { ENV = e; draw(); });
+  loadFabric(false);
+  if(!UPDINFO) setTimeout(() => checkUpd(false), 2500);
+  setInterval(() => api("/api/ping", {}), 30000); api("/api/ping", {});
+}
+init();
+</script>
+</body>
+</html>

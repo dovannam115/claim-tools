@@ -1,0 +1,8 @@
+v1.0.1 (22/10/2026)
+- No ODBC driver to install: Map Claim and Search Database now use a SQL Server driver that ships inside the app.
+- Unzip and run: the first start of Claim Tools.bat adds a Claim & Equipment Tools shortcut to the Desktop and the Start menu. Install.bat is no longer needed.
+- The Update button now works: new versions come from GitHub with one click.
+
+v1.0.0 (22/10/2026)
+- First desktop version of Claim & Equipment Tools: Map Claim, Check Salvage, Check Invoice, Generate GCNBH, Search GCNBH, Search Database, Reconcile TGDD.
+- Runs on your own PC. Fabric sign-in is per user (button at the top of Map Claim and Search Database).

@@ -1,0 +1,65 @@
+Metadata-Version: 2.4
+Name: mssql-python-rs
+Version: 0.3.0
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Rust
+Classifier: Topic :: Database
+Requires-Dist: pytest>=7.0 ; extra == 'dev'
+Requires-Dist: pytest-asyncio>=0.21.0 ; extra == 'dev'
+Requires-Dist: python-dotenv>=1.0.0 ; extra == 'dev'
+Requires-Dist: maturin>=1.0,<2.0 ; extra == 'dev'
+Provides-Extra: dev
+Summary: Rust-based native runtime (TDS core and ODBC driver) consumed by the mssql-python driver.
+Keywords: sqlserver,azure-sql,tds,odbc,mssql
+Author: Microsoft Corporation
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown; charset=UTF-8; variant=GFM
+Project-URL: Homepage, https://github.com/microsoft/mssql-python
+Project-URL: Source, https://github.com/microsoft/mssql-rs
+
+<!--
+Published verbatim as the mssql-python-rs PyPI project description (see
+`readme` in pyproject.toml); it is republished on the next release. Keep the
+content user-facing and every link absolute: repo-relative links do not
+resolve on PyPI.
+-->
+
+# mssql-python-rs
+
+The Rust-based native runtime for connecting to Microsoft SQL Server and Azure
+SQL, shipped as prebuilt platform wheels. This distribution bundles two native
+components:
+
+- **`mssql_py_core`** — a PyO3 extension that implements the SQL Server TDS
+  protocol in Rust. It backs high-throughput paths (such as bulk copy) for the
+  [`mssql-python`](https://github.com/microsoft/mssql-python) driver.
+- **`mssqlodbc`** (alpha) — an ODBC driver for SQL Server, implemented in
+  Rust. It exposes the native ODBC C API. It is under active development and
+  validation for use as an opt-in backend for the `mssql-python` driver. It is
+  not yet a complete general-purpose replacement for Microsoft ODBC Driver 18
+  for SQL Server.
+
+`mssql-python-rs` is the native runtime that
+[`mssql-python`](https://github.com/microsoft/mssql-python) depends on.
+
+## Platforms
+
+Prebuilt CPython 3.10+ wheels for:
+
+- **Windows** — x64, and ARM64 (CPython 3.11+)
+- **macOS** — universal2 (x86_64 + arm64)
+- **Linux** — glibc (`manylinux_2_28`, `manylinux_2_34`) and musl
+  (`musllinux_1_2`), on x86_64 and aarch64
+
+## License
+
+Licensed under the [MIT License](https://github.com/microsoft/mssql-rs/blob/main/LICENSE).
+

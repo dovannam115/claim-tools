@@ -1,0 +1,9 @@
+mssql_py_core/__init__.py,sha256=dWpohDsyIDgFPp8wCLZEDeEsk_Kn4vL8Bp83Ptn-jNg,135
+mssql_py_core/__pycache__/__init__.cpython-312.pyc,,
+mssql_py_core/libs/windows/x64/mssqlodbc.dll,sha256=putyRoDfulGXufGBtQ8k3AUIAJIVRQrp_HYhagTmKCA,14408040
+mssql_py_core/mssql_py_core.pyd,sha256=iFh2hl93T4Q40DjxvFpjznCcrJrl1IVATWqRsiPWEuA,15005496
+mssql_python_rs-0.3.0.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+mssql_python_rs-0.3.0.dist-info/METADATA,sha256=iNFxgNA14IKOmJoovBO5DKCPZQxiq-ZZ4K78EOBijVs,2634
+mssql_python_rs-0.3.0.dist-info/RECORD,,
+mssql_python_rs-0.3.0.dist-info/WHEEL,sha256=7HL-TGvq44Ofp0yhZL-uRIIFHcJTIqqkRZVQ2wZidzM,96
+mssql_python_rs-0.3.0.dist-info/sboms/mssql-py-core.cyclonedx.json,sha256=UahwLvRJayWJ4Xg43MWTkuE474fX8K11K_z6yzvgaPk,295402
