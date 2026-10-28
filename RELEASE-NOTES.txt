@@ -1,3 +1,6 @@
+v1.0.6 (28/10/2026)
+- Generate GCNBH: the SĐBS endorsement now prints the premium from the 'Phí BH' column, the same as the original certificate. Before, it took the 'Phí bảo hiểm - VAT' column. If 'Phí BH' is empty, the tool falls back to the other column and warns.
+
 v1.0.5 (28/10/2026)
 - Map Claim: the Pias sheet is now filled when the STT column is left blank. Rows are taken by IMEI/Serial, the same way the mapping already did.
 - Map Claim: cells with a wrong format (a date that cannot be read, text in a money column) are listed in a Wrong format table with row, column and value, plus a warning. Before, the tool skipped them without saying so.

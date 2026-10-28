@@ -20,9 +20,9 @@ de doi cac cho boi vang thanh cho danh dau [..].
 Ghi chu ve du lieu:
   - Do cot theo TEN tieu de (khong theo vi tri) vi thu tu cot hai sheet lech nhau.
   - Cot "Phi bao hiem - VAT" la phi TRUOC thue, cot "Phi BH" la phi DA GOM thue
-    (kiem chung: 27.969.364 + 2.796.936 = 30.766.300). Mau ban goc ghi
-    "(da bao gom 10% VAT)" nen lay cot da gom thue; mau SDBS ghi "( + VAT )"
-    nen lay cot truoc thue.
+    (kiem chung: 27.969.364 + 2.796.936 = 30.766.300). Ca mau ban goc lan mau
+    SDBS deu lay cot "Phi BH" (Nam chot 28/10/2026: cho [Phi BH] cua SDBS la cot
+    Phi BH, khong phai cot - VAT).
   - Sheet SDBS de so am cho ky giam. Mau da co chu tang/giam o cho [SDBS] nen
     so tien in ra lay tri tuyet doi.
   - Mau khong co cho danh dau so thang chuong trinh -> suy ra tu khoang cach
@@ -445,6 +445,11 @@ def fill_sdbs(rec, tpl, warns):
                      % (tag, txt(rec["loai"])))
     if not txt(rec["so_luong"]):
         warns.append("%s: thiếu số lượng." % tag)
+    phi = rec["phi_gross"]
+    if phi is None:
+        phi = rec["phi_net"]
+        warns.append("%s: cột 'Phí BH' rỗng, tool in số ở cột 'Phí bảo hiểm - VAT', "
+                     "KIỂM TRA LẠI." % tag)
     doc = docx_fill.load(tpl)
     hits = docx_fill.replace_all(doc, {
         "[Số đơn BH/SĐBS]":   txt(rec["so_don"]),
@@ -454,7 +459,7 @@ def fill_sdbs(rec, tpl, warns):
         "[Số lượng]":         txt(rec["so_luong"]),
         "[SĐBS]":             loai or txt(rec["loai"]),
         "[Số tiền BH]":       money(rec["stbh"]),
-        "[Phí BH]":           money(rec["phi_net"]),
+        "[Phí BH]":           money(phi),
     })
     _check(hits, tag, tpl, warns, optional=OPTIONAL)
     # dong ngay thang cuoi trang van la ngay cap cua chinh cai SDBS
@@ -677,7 +682,7 @@ def generate(src, run_dir, want_pdf=True, progress=None, templates=TEMPLATES):
                 lambda rec, base: LOG_SDBS % (
                     txt(rec["so_don"]), txt(rec["so_goc"]),
                     fdate(rec.get("ngay_cap_goc")) or "-", txt(rec["loai"]).strip(),
-                    txt(rec["so_luong"]), money(rec["stbh"]), money(rec["phi_net"]), base),
+                    txt(rec["so_luong"]), money(rec["stbh"]), money(rec["phi_gross"]), base),
                 bump))
         made += len(rows)
         info.append({"sheet": sheet, "kind": kind, "prod": prod, "rows": len(rows)})
