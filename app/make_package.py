@@ -1,4 +1,4 @@
-# Build dist\Claim_Tools.zip to hand over. Run: app\pyembed\python.exe app\make_package.py
+# Build dist\Claim_Equipment_Tools.zip to hand over. Run: app\pyembed\python.exe app\make_package.py
 # Ships code + pyembed + app\data (rate cards, rules, Word templates), with EMPTY output\ and app\dump\.
 # Left out: app\dump\* (this PC's Fabric sign-in, token, logs, uploads), output\ (real claim files),
 # app\_backup_*, __pycache__, this script, and the GitHub token in update.json (blanked).
@@ -6,7 +6,7 @@ import os, json, zipfile
 from common import ROOT, APP
 
 TOP   = "Claim-Tools"
-OUT   = os.path.join(ROOT, "dist", "Claim_Tools.zip")
+OUT   = os.path.join(ROOT, "dist", "Claim_Equipment_Tools.zip")
 FILES = ["Install.bat", "Claim Tools.bat", "VERSION", "RELEASE-NOTES.txt"]
 EMPTY = ["output/", "app/dump/"]
 

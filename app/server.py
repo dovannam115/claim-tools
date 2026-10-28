@@ -222,6 +222,10 @@ def cleanup():
     now = time.time()
     for d in glob.glob(os.path.join(UPLOADS, "*")):
         if now - os.path.getmtime(d) > 86400: shutil.rmtree(d, ignore_errors=True)
+    for f in glob.glob(os.path.join(DUMP, "view", "*")):          # template copies opened to look at
+        try:
+            if now - os.path.getmtime(f) > 86400: os.remove(f)
+        except OSError: pass
     for d in glob.glob(os.path.join(OUTPUT, "*", "*")):
         try:
             if os.path.isdir(d) and now - os.path.getmtime(d) > 30 * 86400: shutil.rmtree(d, ignore_errors=True)
@@ -305,7 +309,10 @@ def env_info():
     try:
         import gcnbh_gen_engine as G
         gcn, sdbs = G.find_templates(C.GCN_TPL)
-        tpl = {"products": sorted(gcn), "sdbs": bool(sdbs)}
+        item = lambda code, f: {"code": code, "name": os.path.basename(f), "path": f,
+                                "modified": time.strftime("%d/%m/%Y", time.localtime(os.path.getmtime(f)))}
+        tpl = {"products": sorted(gcn), "sdbs": bool(sdbs),
+               "items": [item(c, gcn[c]) for c in sorted(gcn)] + ([item("SĐBS", sdbs)] if sdbs else [])}
     except Exception as e:
         tpl = {"error": str(e)}
     return {"word": word_installed(), "gcn": gcn_folder(), "rules_products": rules, "gcn_templates": tpl,
@@ -513,7 +520,8 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/api/update/check": return self.json(update_check())
         if p == "/api/file":
             path = g("path")
-            if not path or not inside(path) or not os.path.isfile(path): return self.json({"error": "no file"}, 404)
+            if not path or not (inside(path) or inside(path, (C.GCN_TPL,))) or not os.path.isfile(path):
+                return self.json({"error": "no file"}, 404)
             return self.send_file(path)
         if p == "/api/template":
             path = C.TEMPLATES.get(g("name"))
@@ -569,6 +577,20 @@ class Handler(BaseHTTPRequestHandler):
                     subprocess.Popen(["explorer", "/select,", path])
                 else:
                     os.startfile(path)
+            except Exception as ex: return self.json({"error": str(ex)}, 500)
+            return self.json({"ok": True})
+        if p == "/api/gcn_template":
+            # look at a GCNBH Word template: Word opens a COPY, so the template the tool uses stays as shipped
+            path = d.get("path") or ""
+            if not inside(path, (C.GCN_TPL,)) or not os.path.isfile(path): return self.json({"error": "Not found"}, 404)
+            try:
+                if d.get("action") == "folder":
+                    subprocess.Popen(["explorer", "/select,", path])
+                else:
+                    view = os.path.join(DUMP, "view"); os.makedirs(view, exist_ok=True)
+                    b, e = os.path.splitext(os.path.basename(path))
+                    dst = os.path.join(view, "%s (copy %s)%s" % (b, time.strftime("%H%M%S"), e))
+                    shutil.copy2(path, dst); os.startfile(dst)
             except Exception as ex: return self.json({"error": str(ex)}, 500)
             return self.json({"ok": True})
         if p == "/api/restart":

@@ -322,6 +322,11 @@ const VI = {
   "Excel file from PIAS": "File Excel từ PIAS", "The product code is in the sheet name, for example GCN gốc BHMR.": "Mã sản phẩm nằm trong tên sheet, ví dụ GCN gốc BHMR.",
   "Merged file as PDF (uses Word)": "Bản gộp xuất PDF (dùng Word)", "Word is not installed on this PC, the merged file stays .docx.": "Máy này không có Word, bản gộp giữ dạng .docx.",
   "Generate": "Tạo giấy",
+  "Word templates in the app": "Mẫu Word trong app", "Updated": "Cập nhật", "View": "Xem", "Download": "Tải về",
+  "No SĐBS template: endorsements cannot be made.": "Chưa có mẫu SĐBS: không tạo được sửa đổi bổ sung.",
+  "View opens a copy in Word, the template the tool uses stays as it is. To change a template, send the new Word file to Nam.":
+    "Xem sẽ mở một bản sao bằng Word, mẫu tool đang dùng giữ nguyên. Muốn đổi mẫu thì gửi file Word mới cho anh Nam.",
+  "Open the templates folder": "Mở thư mục chứa mẫu",
   // Search GCNBH
   "Add a claim file (any file with policy numbers like 25/45/09/KHAC/P000123) or paste numbers, then Search.": "Thêm file claim (file bất kỳ có số đơn dạng 25/45/09/KHAC/P000123) hoặc dán số đơn rồi bấm Tìm.",
   "Claim file (optional)": "File claim (không bắt buộc)", "Sheets to read": "Sheet lấy số đơn", "Or paste policy numbers": "Hoặc dán số hợp đồng",
@@ -804,15 +809,30 @@ EMPTY.gcngen = "Add the Excel file from PIAS, then Generate. A sheet named with 
 VIEWS.gcngen = () => {
   const s = st("gcngen"), word = ENV && ENV.word, tp = (ENV && ENV.gcn_templates) || {};
   if(s.pdf === undefined && ENV) s.pdf = !!word;
-  return '<div class="cols"><div class="card"><div class="no">Excel file from PIAS</div>' + field("gcngen", "file", ".xlsx,.xlsm,.xls", false) +
+  return '<div class="cols"><div class="stack"><div class="card"><div class="no">Excel file from PIAS</div>' + field("gcngen", "file", ".xlsx,.xlsm,.xls", false) +
     '<div class="hint">The product code is in the sheet name, for example GCN gốc BHMR.</div><div class="no">Options</div>' +
     '<label class="ck"><input type="checkbox" ' + (s.pdf ? "checked" : "") + ' ' + (word ? "" : "disabled") + ' onchange="S.gcngen.pdf=this.checked">Merged file as PDF (uses Word)</label>' +
     (ENV && !word ? '<div class="hint">Word is not installed on this PC, the merged file stays .docx.</div>' : "") +
-    det("tpl", "Word templates (" + ((tp.products || []).length) + " products)", '<div class="muted" style="margin-top:6px">' +
-    esc((tp.products || []).join(", ")) + (tp.sdbs ? " · SĐBS" : " · no SĐBS template") + (tp.error ? esc(tp.error) : "") + '</div>') +
     '<div class="act"><button class="btn pri" ' + (ready("gcngen", "file") && !(JOBS.gcngen && JOBS.gcngen.state === "running") ? "" : "disabled") +
-    ' onclick="run(\'gcngen\',{file:ids(\'gcngen\',\'file\')[0],pdf:!!S.gcngen.pdf},\'Generate GCNBH\')">Generate</button></div></div><div class="card" id="run-gcngen"></div></div>';
+    ' onclick="run(\'gcngen\',{file:ids(\'gcngen\',\'file\')[0],pdf:!!S.gcngen.pdf},\'Generate GCNBH\')">Generate</button></div></div>' + tplCard(tp) +
+    '</div><div class="card" id="run-gcngen"></div></div>';
 };
+// The Word templates the tool fills, one per product + the SĐBS one. View opens a copy in Word,
+// so the template inside the app is never changed by looking at it.
+function tplCard(tp){
+  let h = '<div class="card"><h2>Word templates in the app</h2>';
+  if(tp.error) return h + '<div class="note bad">' + esc(tp.error) + '</div></div>';
+  if(!tp.items) return h + '<div class="muted">Checking...</div></div>';
+  if(!tp.sdbs) h += '<div class="note warn">No SĐBS template: endorsements cannot be made.</div>';
+  h += '<div class="tw" style="margin-top:4px"><table><thead><tr><th>Product</th><th>Updated</th><th></th></tr></thead><tbody>' +
+    tp.items.map(t => '<tr><td title="' + esc(t.name) + '"><b>' + esc(t.code) + '</b></td><td>' + esc(t.modified) + '</td><td class="t" style="text-align:right">' +
+      '<button class="btn sm" onclick="tplDo(' + esc(JSON.stringify(t.path)) + ',\'view\')">View</button> ' +
+      '<button class="btn sm gho" onclick="dl(' + esc(JSON.stringify(t.path)) + ')">Download</button></td></tr>').join("") + '</tbody></table></div>' +
+    '<div class="hint">View opens a copy in Word, the template the tool uses stays as it is. To change a template, send the new Word file to Nam.</div>' +
+    (tp.items.length ? '<div style="margin-top:8px"><button class="link" onclick="tplDo(' + esc(JSON.stringify(tp.items[0].path)) + ',\'folder\')">Open the templates folder</button></div>' : '');
+  return h + '</div>';
+}
+async function tplDo(path, action){ const r = await api("/api/gcn_template", {path, action}); if(r.error) toast(tr(r.error)); }
 
 // ---- Search GCNBH
 EMPTY.gcnsearch = "Add a claim file (any file with policy numbers like 25/45/09/KHAC/P000123) or paste numbers, then Search.";

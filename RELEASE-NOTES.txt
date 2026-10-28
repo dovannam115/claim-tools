@@ -1,3 +1,6 @@
+v1.0.4 (28/10/2026)
+- Generate GCNBH: a list of the Word templates in the app (product, date updated). View opens a copy in Word, Download saves one. The template the tool uses is never changed from here.
+
 v1.0.3 (28/10/2026)
 - Map Claim: the mapped file now has the Pias sheet (the Pias template was missing from the app).
 - Map Claim: a warning now says why when the Pias sheet cannot be added.
