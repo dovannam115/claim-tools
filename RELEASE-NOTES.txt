@@ -1,3 +1,8 @@
+v1.0.5 (28/10/2026)
+- Map Claim: the Pias sheet is now filled when the STT column is left blank. Rows are taken by IMEI/Serial, the same way the mapping already did.
+- Map Claim: cells with a wrong format (a date that cannot be read, text in a money column) are listed in a Wrong format table with row, column and value, plus a warning. Before, the tool skipped them without saying so.
+- Claim input template: the Guide sheet now says STT can be left blank.
+
 v1.0.4 (28/10/2026)
 - Generate GCNBH: a list of the Word templates in the app (product, date updated). View opens a copy in Word, Download saves one. The template the tool uses is never changed from here.
 

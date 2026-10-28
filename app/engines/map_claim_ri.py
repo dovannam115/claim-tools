@@ -540,6 +540,45 @@ def read_bangke(path, sheet, hr):
     wb.close()
     return rows
 
+# Kiem tra dinh dang: o co gia tri nhung pdate/pnum khong doc duoc thi tool bo qua o do (coi nhu trong).
+# Ham nay liet ke cac o do de bao cho nguoi dung, khong doi ket qua map.
+FMT_DATE = ["incident", "notif", "eff", "exp"]
+def _fee_col(h):
+    s = _sq(h)
+    return "vat" in s or s.startswith("phí")
+def format_issues(path, sheet, hr):
+    """-> list (sheet_row, header, gia tri goc, loi) cho cot ngay + so tien cua bang ke."""
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    ws = wb[sheet]
+    idx = _hdr_index(ws, hr)
+    chk = {}
+    for k in FMT_DATE:
+        for a in BK_AL[k]:
+            if a in idx: chk[idx[a]] = (a, "date"); break
+    for a in BK_AL["si"]:
+        if a in idx: chk[idx[a]] = (a, "num"); break
+    for h, c in idx.items():
+        if c not in chk and _fee_col(h): chk[c] = (" ".join(str(h).split()), "num")
+    stt_c, ser_c = _row_key_cols(ws, hr, idx)
+    out = []
+    for row in ws.iter_rows(min_row=hr + 1, values_only=False):
+        vals = [c.value for c in row]
+        if not _is_data_row(vals, stt_c, ser_c): continue
+        rnum = next((c.row for c in row if getattr(c, "row", None) is not None), None)
+        for c, (h, kind) in sorted(chk.items()):
+            v = vals[c] if c < len(vals) else None
+            if v is None or (isinstance(v, str) and v.strip() in ("", "-")): continue
+            if kind == "date":
+                if isinstance(v, (int, float)) and not isinstance(v, bool):
+                    out.append((rnum, h, v, "Ngày đang là số, không phải ngày")); continue
+                d = pdate(v)
+                if d is None: out.append((rnum, h, v, "Không đọc được ngày (cần dd/mm/yyyy)"))
+                elif not 2000 <= d.year <= 2100: out.append((rnum, h, v, "Năm không hợp lệ"))
+            elif not isinstance(v, (int, float)) and pnum(v) is None:
+                out.append((rnum, h, v, "Không phải số"))
+    wb.close()
+    return out
+
 # ---------- 3. connect Fabric ----------
 def connect():
     try:
@@ -1138,15 +1177,21 @@ def gen_pias(mapped_path, bk_sheet, bk_hdr):
              dol=ex("Ngày tổn thất"), notif=ex("Ngày thông báo"), invno=ex("Số HĐ"), invdate=ex("Ngày HĐ"),
              lab_pre=lab_pre,  lab_vat=ex("VAT 8%") or vat_after(lab_pre),
              part_pre=part_pre, part_vat=ex("VAT 10% & 8%") or vat_after(part_pre))
-    if not C["stt"] or not C["policy"]:
+    if not C["policy"] or not (C["stt"] or C["serial"]):
         print("  (skip PIAS: cannot find STT / Policy No columns)"); return None
+    # cung quy tac nhan dong voi read_bangke: cot STT rong/thieu TOAN sheet thi nhan dong theo IMEI/Serial
+    def _num(v): return isinstance(v, (int, float)) and v
+    use_stt = bool(C["stt"]) and any(_num(ws.cell(row=r, column=C["stt"]).value)
+                                     for r in range(HR+1, ws.max_row+1))
+    if not use_stt: print("  (PIAS: STT column empty, rows taken by IMEI/Serial)")
     def gv(r, k): return ws.cell(row=r, column=C[k]).value if C[k] else None
     # 1) one record per claim row (keep the fee components so we can sum by contract)
     from collections import OrderedDict
     claims = []
     for r in range(HR+1, ws.max_row+1):
-        stt = ws.cell(row=r, column=C["stt"]).value
-        if not isinstance(stt, (int, float)) or not stt: continue
+        if use_stt:
+            if not _num(ws.cell(row=r, column=C["stt"]).value): continue
+        elif not str(gv(r, "serial") or "").strip(): continue
         claims.append(dict(                          # stext: IMEI dang so -> text, khong de Excel hien E+14
             policy=nz(stext(gv(r,"policy"))), serial=stext(gv(r,"serial")), mgd=nz(gv(r,"mgd")),
             dol=pdate(gv(r,"dol")), notif=pdate(gv(r,"notif")),

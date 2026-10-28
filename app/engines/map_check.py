@@ -8,7 +8,7 @@ import map_claim_ri as core
 
 # (label, key in core.BK_AL, key in core.ALIASES, group, what dies when the column is missing)
 FIELD_SPEC = [
-    ("STT", "stt", "no", "Nhận dòng", "Nhận dòng dữ liệu; bắt buộc để sinh sheet Pias"),
+    ("STT", "stt", "no", "Nhận dòng", "Nhận dòng dữ liệu; trống cả cột thì nhận dòng theo IMEI/Serial"),
     ("Số yêu cầu", "gsc", "rr", "Nhận dòng", "Cột định danh hồ sơ trong preview"),
     ("IMEI/Serial", "serial", "serial", "Khóa map", "Khóa map 1, ưu tiên cao nhất"),
     ("Mã giao dịch", "mgd", "mgd", "Khóa map", "Khóa map 2"),

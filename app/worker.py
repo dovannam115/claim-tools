@@ -105,6 +105,9 @@ def run_map(a):
         hr2 = hr
     if not claims:
         raise UserError("The chosen sheet has no claim rows to map.")
+    bad = core.format_issues(path, sheet, hr) if kind == "bangke" else []
+    if bad:
+        say("%d cells have a wrong format, see the 'Wrong format' table." % len(bad))
     say("%d claim rows. Connecting to Fabric ..." % len(claims))
     cn = fabric_connect(core); cur = cn.cursor()
     say("Matching against the premium / RI database ...")
@@ -114,6 +117,11 @@ def run_map(a):
     edits = [(sheet, hr2, {m["c"]["sheet_row"]: core._row_values(m) for m in results})]
     out = core.surgical_write(path, edits)
     pias_n = None; warns = []
+    if bad:
+        cnt = Counter(h for _, h, _, _ in bad)
+        warns.append("%d cells have a wrong format and were skipped (treated as blank): %s. "
+                     "Fix them in the input file and run again; see the 'Wrong format' table below."
+                     % (len(bad), ", ".join("%s %d" % kv for kv in cnt.items())))
     if kind == "bangke":
         core.PIAS_TPL = C.PIAS_TPL
         pb = core.gen_pias(out, sheet, hr2)
@@ -123,7 +131,7 @@ def run_map(a):
         elif not os.path.exists(C.PIAS_TPL):
             warns.append("No 'Pias' sheet: the Pias template is missing from the app. Click Update.")
         else:
-            warns.append("No 'Pias' sheet: the claim sheet has no STT column or no fee rows.")
+            warns.append("No 'Pias' sheet: no rows with a Policy No and fees (check the STT or IMEI/Serial column).")
     else:
         warns.append("No 'Pias' sheet: this sheet is read as an English 'Data' sheet. "
                      "Use the claim statement layout (Số yêu cầu + IMEI/Serial headers) to get Pias.")
@@ -162,7 +170,8 @@ def run_map(a):
     return {"stats": [stat("Rows", n), stat("Mapped", matched, "good" if matched == n else "warn"),
                       stat("Rows with note", flagged, "warn" if flagged else "")],
             "files": [out], "notes": notes, "warns": warns,
-            "tables": [table("Columns the tool appends", cols, prev, views)]}
+            "tables": ([table("Wrong format", ["Row", "Column", "Value", "Problem"], bad)] if bad else []) +
+                      [table("Columns the tool appends", cols, prev, views)]}
 
 
 # ------------------------------------------------------------------ Check Salvage
