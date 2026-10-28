@@ -1,3 +1,7 @@
+v1.0.3 (28/10/2026)
+- Map Claim: the mapped file now has the Pias sheet (the Pias template was missing from the app).
+- Map Claim: a warning now says why when the Pias sheet cannot be added.
+
 v1.0.2 (22/10/2026)
 - English / Tiếng Việt switch at the bottom of the left bar. The choice is remembered on this PC.
 - The light / dark button now reads Light mode / Dark mode.

@@ -11,6 +11,7 @@ OUTPUT  = os.path.join(ROOT, "output")        # one folder per run: output\<Tool
 RATE_SOURCE = os.path.join(DATA, "rate_source.xlsm")
 RULES       = os.path.join(DATA, "reconcile_tgdd_rules.xlsx")
 GCN_TPL     = os.path.join(DATA, "gcnbh_templates")
+PIAS_TPL    = os.path.join(DATA, "Pias_Template.xlsx")
 TEMPLATES   = {"claim": os.path.join(DATA, "Claim_Input_Template.xlsx"),
                "invoice": os.path.join(DATA, "Invoice_Input_Template.xlsx"),
                "rules": RULES}

@@ -113,12 +113,20 @@ def run_map(a):
     say("Writing the mapped columns (original format kept) ...")
     edits = [(sheet, hr2, {m["c"]["sheet_row"]: core._row_values(m) for m in results})]
     out = core.surgical_write(path, edits)
-    pias_n = None
+    pias_n = None; warns = []
     if kind == "bangke":
+        core.PIAS_TPL = C.PIAS_TPL
         pb = core.gen_pias(out, sheet, hr2)
         if pb:
             core.graft_pias(out, pb[0]); pias_n = pb[1]
             say("Added the 'Pias' sheet (%d rows)." % pias_n)
+        elif not os.path.exists(C.PIAS_TPL):
+            warns.append("No 'Pias' sheet: the Pias template is missing from the app. Click Update.")
+        else:
+            warns.append("No 'Pias' sheet: the claim sheet has no STT column or no fee rows.")
+    else:
+        warns.append("No 'Pias' sheet: this sheet is read as an English 'Data' sheet. "
+                     "Use the claim statement layout (Số yêu cầu + IMEI/Serial headers) to get Pias.")
 
     matched = sum(1 for m in results if m["best"])
     bykey = Counter(m["key"] for m in results if m["best"])
@@ -153,7 +161,7 @@ def run_map(a):
     if pias_n is not None: notes.append("Pias sheet %d rows" % pias_n)
     return {"stats": [stat("Rows", n), stat("Mapped", matched, "good" if matched == n else "warn"),
                       stat("Rows with note", flagged, "warn" if flagged else "")],
-            "files": [out], "notes": notes,
+            "files": [out], "notes": notes, "warns": warns,
             "tables": [table("Columns the tool appends", cols, prev, views)]}
 
 

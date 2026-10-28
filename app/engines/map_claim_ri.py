@@ -1101,10 +1101,11 @@ def surgical_write(in_path, edits):
 
 # ---------- 7. build PIAS input file from the mapped statement sheet ----------
 PIAS_CANBO = "45.CB030007"
+PIAS_TPL   = os.path.join(HERE, "Template nhap HSBT Pias.xlsx")   # the desktop app points this at app\data
 def gen_pias(mapped_path, bk_sheet, bk_hdr):
     """Doc sheet bang ke da map, dung form PIAS tu template -> tra ve (bytes_xlsx, n_rows).
        (Khong luu file rieng: noi dung nay duoc ghep thanh sheet 'Pias' trong file MAPPED.)"""
-    tpl = os.path.join(HERE, "Template nhap HSBT Pias.xlsx")
+    tpl = PIAS_TPL
     if not os.path.exists(tpl):
         print("  (skip PIAS: 'Template nhap HSBT Pias.xlsx' not found in folder)"); return None
     from copy import copy as _copy
