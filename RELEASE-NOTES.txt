@@ -1,3 +1,7 @@
+v1.0.7 (02/11/2026)
+- Search GCNBH: the certificate folder has moved to Minh's OneDrive (GCNBH + XMP_ĐMX). The tool now finds this folder first and links in the result file open it. The old folder is still used if it is the only one on the PC.
+- Search GCNBH: a Refresh button next to the folder status checks the OneDrive folder again, so there is no need to close the app after adding or removing a shortcut. The status is also checked again when the tab is opened.
+
 v1.0.6 (28/10/2026)
 - Generate GCNBH: the SĐBS endorsement now prints the premium from the 'Phí BH' column, the same as the original certificate. Before, it took the 'Phí bảo hiểm - VAT' column. If 'Phí BH' is empty, the tool falls back to the other column and warns.
 

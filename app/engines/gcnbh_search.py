@@ -32,9 +32,16 @@ import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-KHO_TEN = "GCNBH + XMP - TGDĐ"
-WEB = ("https://pvicomvn-my.sharepoint.com/personal/thanhnnd_pvi_com_vn/Documents/"
-       "PVI/GCN + XMP - DMX/GCNBH + XMP - TGDĐ")
+# Kho GCN tung doi cho: tim theo thu tu, kho moi truoc. Ten = duoi ten shortcut OneDrive.
+KHO_LIST = [
+    ("GCNBH + XMP_ĐMX",
+     "https://pvicomvn-my.sharepoint.com/personal/minhht_pvi_com_vn/Documents/GCNBH + XMP_ĐMX"),
+    ("GCNBH + XMP - TGDĐ",
+     "https://pvicomvn-my.sharepoint.com/personal/thanhnnd_pvi_com_vn/Documents/"
+     "PVI/GCN + XMP - DMX/GCNBH + XMP - TGDĐ"),
+]
+KHO_TEN = KHO_LIST[0][0]
+WEB = KHO_LIST[0][1]
 TTL = 30
 
 RE_POL = re.compile(r"(\d{2})/(\d{2})/(\d{2})/KHAC/([PC])(\d{6,7})(?:/E(\d{1,3}))?", re.I)
@@ -159,10 +166,14 @@ def tim_xmp(xmps, hit):
 
 
 def tim_kho():
+    """-> duong dan kho tren may; dong thoi chon WEB dung chu kho de link Excel mo duoc."""
+    global WEB
     home = os.path.expanduser("~")
-    for p in glob.glob(os.path.join(home, "OneDrive - *", "*" + KHO_TEN)):
-        if os.path.isdir(p):
-            return p
+    for ten, web in KHO_LIST:
+        for p in glob.glob(os.path.join(home, "OneDrive - *", "*" + glob.escape(ten))):
+            if os.path.isdir(p):
+                WEB = web
+                return p
     return ""
 
 

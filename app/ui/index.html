@@ -332,7 +332,7 @@ const VI = {
   "Claim file (optional)": "File claim (không bắt buộc)", "Sheets to read": "Sheet lấy số đơn", "Or paste policy numbers": "Hoặc dán số hợp đồng",
   "Product of the claims": "Sản phẩm của hồ sơ", "Auto (from the file)": "Tự nhận theo file", "All products": "Tất cả sản phẩm",
   "One policy number can have certificates of several products. Auto reads the Product column, else the file name.": "Một số đơn có thể có GCN của nhiều sản phẩm. Tự nhận lấy theo cột Product, không có thì theo tên file.",
-  "Search": "Tìm", "OneDrive folder found": "Đã thấy thư mục OneDrive", "Print": "In", "Max pages per PDF": "Số trang tối đa mỗi file PDF",
+  "Search": "Tìm", "OneDrive folder found": "Đã thấy thư mục OneDrive", "OneDrive folder still not on this PC": "Máy này vẫn chưa có thư mục OneDrive", "Check the OneDrive folder again": "Kiểm tra lại thư mục OneDrive", "Refresh": "Làm mới", "Print": "In", "Max pages per PDF": "Số trang tối đa mỗi file PDF",
   "Include XMP (each XMP once, right after the first certificate using it)": "Kèm XMP (mỗi XMP in 1 lần, ngay sau GCN đầu tiên dùng nó)",
   "Only rows with exactly one certificate (Tìm thấy). Open the others from their links.": "Chỉ lấy các dòng có đúng 1 giấy (Tìm thấy). Các dòng khác mở từ link.",
   "Merge certificates to PDF": "Gộp GCN thành PDF", "PDF files": "Số file PDF",
@@ -515,7 +515,21 @@ function go(k){
   CUR = k; try { localStorage.setItem("ct_tool", k); } catch(e){}
   $("title").textContent = TITLES[k] || "";
   drawNav(); draw();
+  if(k === "gcnsearch" && ENV) loadEnv();
 }
+function loadEnv(force){
+  // re-check each time: the OneDrive shortcut can be added or removed while the app is open
+  return api("/api/env").then(e => {
+    const was = ENV ? ENV.gcn && ENV.gcn.path : null;
+    ENV = e;
+    if(force || was === null || was !== (e.gcn && e.gcn.path)) draw();
+  });
+}
+function refreshGcn(){
+  const b = $("b-gcnref"); if(b) b.disabled = true;
+  loadEnv(true).then(() => toast(ENV && ENV.gcn && ENV.gcn.path ? "OneDrive folder found" : "OneDrive folder still not on this PC"));
+}
+window.addEventListener("focus", () => { if(CUR === "gcnsearch" && ENV) loadEnv(); });
 function draw(){
   const f = VIEWS[CUR]; $("hstatus").innerHTML = "";
   $("view").innerHTML = f ? f() : "";
@@ -857,6 +871,7 @@ HEAD.gcnsearch = () => {
   const g = ENV && ENV.gcn;
   $("hstatus").innerHTML = !ENV ? "" : g.path ? '<span class="dot ok"></span>OneDrive folder found' :
     '<span class="dot bad"></span>OneDrive folder "' + esc(g.name || "GCNBH + XMP - TGDĐ") + '" not on this PC';
+  if(ENV) $("hstatus").innerHTML += ' <button class="btn sm gho" id="b-gcnref" onclick="refreshGcn()" title="Check the OneDrive folder again">Refresh</button>';
 };
 AFTER.gcnsearch = () => canGcn();
 function canGcn(){
@@ -999,7 +1014,7 @@ async function init(){
   let start = "map"; try { start = localStorage.getItem("ct_tool") || "map"; } catch(e){}
   go(VIEWS[start] ? start : "map");
   poll();
-  api("/api/env").then(e => { ENV = e; draw(); });
+  loadEnv();
   loadFabric(false);
   if(!UPDINFO) setTimeout(() => checkUpd(false), 2500);
   setInterval(() => api("/api/ping", {}), 30000); api("/api/ping", {});
