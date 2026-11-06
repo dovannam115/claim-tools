@@ -1,3 +1,6 @@
+v1.0.8 (06/11/2026)
+- Search GCNBH: Product of the claims has a new choice, Choose products. Tick one or more products (for example 1D1 and BHMR) instead of only one.
+
 v1.0.7 (02/11/2026)
 - Search GCNBH: the certificate folder has moved to Minh's OneDrive (GCNBH + XMP_ĐMX). The tool now finds this folder first and links in the result file open it. The old folder is still used if it is the only one on the PC.
 - Search GCNBH: a Refresh button next to the folder status checks the OneDrive folder again, so there is no need to close the app after adding or removing a shortcut. The status is also checked again when the tab is opened.

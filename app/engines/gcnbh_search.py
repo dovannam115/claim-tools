@@ -543,9 +543,14 @@ def gop_pdf(root, rows, kem_xmp=True, progress=None, trang_moi_file=TRANG_MOI_FI
 
 
 def chay(ket, idx, chon, goi_y_file, xmps=()):
+    # chon: TU_NHAN | TAT_CA | 1 ma san pham | list nhieu ma san pham (user tick nhieu)
+    if isinstance(chon, (list, tuple, set)):
+        chon = set(chon) or TU_NHAN
     rows = []
     for pol, e in sorted(ket.items()):
-        if chon == TU_NHAN:
+        if isinstance(chon, set):
+            sp = set(chon)
+        elif chon == TU_NHAN:
             sp = e["sp"] or ({goi_y_file} if goi_y_file else set())
         elif chon == TAT_CA:
             sp = set()

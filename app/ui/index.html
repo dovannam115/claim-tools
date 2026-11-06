@@ -331,6 +331,7 @@ const VI = {
   "Add a claim file (any file with policy numbers like 25/45/09/KHAC/P000123) or paste numbers, then Search.": "Thêm file claim (file bất kỳ có số đơn dạng 25/45/09/KHAC/P000123) hoặc dán số đơn rồi bấm Tìm.",
   "Claim file (optional)": "File claim (không bắt buộc)", "Sheets to read": "Sheet lấy số đơn", "Or paste policy numbers": "Hoặc dán số hợp đồng",
   "Product of the claims": "Sản phẩm của hồ sơ", "Auto (from the file)": "Tự nhận theo file", "All products": "Tất cả sản phẩm",
+  "Choose products": "Chọn sản phẩm", "Tick one or more products.": "Tick một hoặc nhiều sản phẩm.",
   "One policy number can have certificates of several products. Auto reads the Product column, else the file name.": "Một số đơn có thể có GCN của nhiều sản phẩm. Tự nhận lấy theo cột Product, không có thì theo tên file.",
   "Search": "Tìm", "OneDrive folder found": "Đã thấy thư mục OneDrive", "OneDrive folder still not on this PC": "Máy này vẫn chưa có thư mục OneDrive", "Check the OneDrive folder again": "Kiểm tra lại thư mục OneDrive", "Refresh": "Làm mới", "Print": "In", "Max pages per PDF": "Số trang tối đa mỗi file PDF",
   "Include XMP (each XMP once, right after the first certificate using it)": "Kèm XMP (mỗi XMP in 1 lần, ngay sau GCN đầu tiên dùng nó)",
@@ -850,9 +851,11 @@ async function tplDo(path, action){ const r = await api("/api/gcn_template", {pa
 
 // ---- Search GCNBH
 EMPTY.gcnsearch = "Add a claim file (any file with policy numbers like 25/45/09/KHAC/P000123) or paste numbers, then Search.";
-const GCN_PROD = [["Tự nhận theo file", "Auto (from the file)"], ["Tất cả sản phẩm", "All products"], ["1D1"], ["BHMR"], ["BHRV"], ["NVMH"], ["MDM"], ["ADLD"], ["BHNC"]];
+const GCN_PROD = [["Tự nhận theo file", "Auto (from the file)"], ["Tất cả sản phẩm", "All products"], ["pick", "Choose products"]];
+const GCN_SP = ["1D1", "BHMR", "BHRV", "NVMH", "MDM", "ADLD", "BHNC"];
 VIEWS.gcnsearch = () => {
-  const s = st("gcnsearch"); s.product = s.product || GCN_PROD[0][0]; s.text = s.text || "";
+  const s = st("gcnsearch"); s.product = s.product || GCN_PROD[0][0]; s.text = s.text || ""; s.prods = s.prods || [];
+  if(GCN_SP.includes(s.product)){ s.prods = [s.product]; s.product = "pick"; }
   const g = ENV && ENV.gcn;
   let h = '<div class="cols"><div class="stack"><div class="card"><div class="no">Claim file (optional)</div>' + field("gcnsearch", "file", ".xlsx,.xlsm", false);
   if(s.sheets && s.sheets.length){
@@ -860,8 +863,11 @@ VIEWS.gcnsearch = () => {
          ' onchange="S.gcnsearch.sheets[' + i + '].on=this.checked;draw()">' + esc(x.sheet) + ' <span style="color:var(--dim)">(' + x.n + ' policies)</span></label>').join("");
   }
   h += '<div class="no">Or paste policy numbers</div><textarea rows="4" placeholder="25/45/09/KHAC/P000158&#10;26/45/09/KHAC/P000380/E02" oninput="S.gcnsearch.text=this.value;canGcn()">' + esc(s.text) + '</textarea>' +
-       '<div class="no">Product of the claims</div><select onchange="S.gcnsearch.product=this.value">' + GCN_PROD.map(([v, l]) => '<option value="' + esc(v) + '" ' +
+       '<div class="no">Product of the claims</div><select onchange="S.gcnsearch.product=this.value;draw()">' + GCN_PROD.map(([v, l]) => '<option value="' + esc(v) + '" ' +
        (v === s.product ? "selected" : "") + '>' + esc(l || v) + '</option>').join("") + '</select>' +
+       (s.product === "pick" ? '<div style="display:flex;flex-wrap:wrap;gap:2px 16px;margin-top:6px">' + GCN_SP.map(p => '<label class="ck"><input type="checkbox" ' +
+         (s.prods.includes(p) ? "checked" : "") + ' onchange="gcnProd(\'' + p + '\',this.checked)">' + p + '</label>').join("") + '</div>' +
+         (s.prods.length ? "" : '<div class="hint">Tick one or more products.</div>') : "") +
        '<div class="hint">One policy number can have certificates of several products. Auto reads the Product column, else the file name.</div>' +
        '<div class="act"><button class="btn pri" id="b-gcn" onclick="runGcn()">Search</button></div></div></div>' +
        '<div class="stack"><div class="card" id="run-gcnsearch"></div><div id="run-gcnprint"></div></div></div>';
@@ -877,7 +883,13 @@ AFTER.gcnsearch = () => canGcn();
 function canGcn(){
   const s = st("gcnsearch"), b = $("b-gcn"); if(!b) return;
   const fileOk = ready("gcnsearch", "file") && (s.sheets || []).some(x => x.on);
-  b.disabled = !(ENV && ENV.gcn.path) || !(fileOk || (s.text || "").trim()) || (JOBS.gcnsearch && JOBS.gcnsearch.state === "running");
+  b.disabled = !(ENV && ENV.gcn.path) || !(fileOk || (s.text || "").trim()) || (JOBS.gcnsearch && JOBS.gcnsearch.state === "running") ||
+    (s.product === "pick" && !(s.prods || []).length);
+}
+function gcnProd(p, on){
+  const s = st("gcnsearch");
+  s.prods = GCN_SP.filter(x => x === p ? on : s.prods.includes(x));
+  draw();
 }
 ONFILE.gcnsearch = async (key, removed) => {
   const s = st("gcnsearch"); s.sheets = null;
@@ -890,7 +902,7 @@ function runGcn(){
   const s = st("gcnsearch"), f = ids("gcnsearch", "file")[0];
   const sheets = f ? (s.sheets || []).filter(x => x.on).map(x => x.sheet) : null;
   delete JOBS.gcnprint;
-  run("gcnsearch", {file: f && sheets.length ? f : "", sheets, text:s.text || "", product:s.product}, "Search GCNBH");
+  run("gcnsearch", {file: f && sheets.length ? f : "", sheets, text:s.text || "", product: s.product === "pick" ? s.prods : s.product}, "Search GCNBH");
 }
 EXTRA.gcnsearch = (r, j) => {
   if(!r.found) return "";
