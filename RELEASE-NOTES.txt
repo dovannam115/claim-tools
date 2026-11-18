@@ -1,3 +1,6 @@
+v1.0.17 (18/11/2026)
+- Icon bỏ viền trắng quanh ngoài (để trong suốt), nhìn gọn trên taskbar.
+
 v1.0.16 (18/11/2026)
 - Icon shortcut ngoài Desktop và Start menu tự đổi theo icon app sau khi cập nhật, không cần khởi động lại máy.
 
