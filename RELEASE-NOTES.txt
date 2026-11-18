@@ -1,3 +1,6 @@
+v1.0.15 (18/11/2026)
+- Icon mới: chú gấu trúc vẫy tay.
+
 v1.0.14 (18/11/2026)
 - The update banner scrolls slower and easier to read, and it now shows on its own on open (the app re-checks fresh every time).
 
