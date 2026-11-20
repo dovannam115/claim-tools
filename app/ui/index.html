@@ -1089,11 +1089,10 @@ function runPrint(dir){ const s = st("gcnsearch"); run("gcnprint", {search_dir:d
 // ---- Search Database
 EMPTY.searchdb = "Type IMEI, phone, policy number or request ID on the left, then Search. Returns every premium row that matches, cancellations and /E versions included.";
 VIEWS.searchdb = () => {
-  const s = st("searchdb"); s.mode = s.mode || "auto"; s.top = s.top || 5000; s.text = s.text || "";
-  const hint = {auto:"A value with / is a policy number; the rest go IMEI, then request ID, then phone, the same order as Map Claim.",
-                policy:"Prefix match: 25/45/09/KHAC/P000028 also returns /E01, /E02.", phone:"Matches the last 9 digits.", serial:"", req:""}[s.mode];
+  const s = st("searchdb"); if(!s.mode || s.mode === "auto") s.mode = "serial"; s.top = s.top || 5000; s.text = s.text || "";
+  const hint = {policy:"Prefix match: 25/45/09/KHAC/P000028 also returns /E01, /E02.", phone:"Matches the last 9 digits.", serial:"", req:""}[s.mode];
   return '<div id="fabbox"></div><div class="cols"><div class="card"><div class="no">Search by</div>' +
-    seg("searchdb", "mode", [["auto", "Auto"], ["serial", "IMEI"], ["phone", "Phone"], ["policy", "Policy"], ["req", "Request ID"]]) +
+    seg("searchdb", "mode", [["serial", "IMEI"], ["phone", "Phone"], ["policy", "Policy"], ["req", "Request ID"]]) +
     (hint ? '<div class="hint">' + esc(hint) + '</div>' : "") +
     '<div class="no">Values, one per line</div><textarea rows="8" placeholder="351954790151594&#10;0356968607&#10;25/45/09/KHAC/P000028" oninput="S.searchdb.text=this.value;canDb()">' + esc(s.text) + '</textarea>' +
     '<div class="hint" id="dbcount"></div>' +
