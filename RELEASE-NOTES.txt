@@ -1,3 +1,6 @@
+v1.0.23 (20/11/2026)
+- Search Database: the column filter now works like Excel. Tick values in the list with (Select All), search inside the list, then OK or Cancel. Each list only shows values left after the other filters. A funnel marks filtered columns.
+
 v1.0.22 (20/11/2026)
 - Search Database: click a column header in the premium rows to sort it or filter it by value, like Excel. Clear filters resets the table.
 - Search Database: the result table now holds up to 5,000 rows for filtering; the Excel file still has all rows.

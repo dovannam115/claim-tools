@@ -179,12 +179,15 @@
   #thpop .throw .tha{margin:0; opacity:1}
   #thpop .inp{width:100%; box-sizing:border-box}
   .thlist{max-height:230px; overflow:auto; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:4px 0}
-  .thv{display:flex; justify-content:space-between; gap:10px; padding:5px 8px; border-radius:7px; cursor:pointer}
-  .thv span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .thlist{max-height:260px}
+  .thv{display:flex; align-items:center; gap:8px; padding:4px 8px; border-radius:6px; cursor:pointer; text-transform:none; letter-spacing:0;
+       font-size:12.5px; color:var(--fg); margin:0}
+  .thv input{accent-color:var(--ember); margin:0; flex:0 0 auto; cursor:pointer}
+  .thv span{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .thv b{font-weight:400; color:var(--dim); font-variant-numeric:tabular-nums}
   .thv:hover{background:var(--hover)}
-  .thv.on{background:var(--ember); color:#fff}
-  .thv.on b{color:rgba(255,255,255,.8)}
+  #thpop .throw button:disabled{opacity:.4; cursor:default; background:none}
+  .thfoot .sp{flex:1}
   .thfoot{display:flex; align-items:center; gap:6px}
   .thfoot .muted{flex:1; font-size:12px}
 
@@ -408,6 +411,9 @@ const VI = {
   // Search Database
   "Type IMEI, phone, policy number or request ID on the left, then Search. Returns every premium row that matches, cancellations and /E versions included.": "Nhập IMEI, số điện thoại, số hợp đồng hoặc mã giao dịch bên trái rồi bấm Tìm. Trả về mọi dòng phí khớp, kể cả dòng hủy và các bản sửa đổi /E.",
   "Search by": "Tra theo", "Auto": "Tự động",
+  "Sort Smallest to Largest": "Sắp xếp từ nhỏ đến lớn", "Sort Largest to Smallest": "Sắp xếp từ lớn đến nhỏ",
+  "Sort A to Z": "Sắp xếp từ A đến Z", "Sort Z to A": "Sắp xếp từ Z đến A", "(Select All)": "(Chọn tất cả)",
+  "(Select All Search Results)": "(Chọn tất cả kết quả tìm)", "(Blanks)": "(Trống)",
   "Clear filters": "Bỏ lọc", "Sort ascending": "Sắp xếp tăng dần", "Sort descending": "Sắp xếp giảm dần", "Search values": "Tìm giá trị",
   "(blank)": "(trống)", "Select shown": "Chọn hết đang hiện", "Clear": "Bỏ chọn", "All values": "Tất cả giá trị", "No value matches.": "Không có giá trị khớp.", "Phone": "SĐT", "Policy": "Số HĐ", "Request ID": "Mã GD",
   "A value with / is a policy number; the rest go IMEI, then request ID, then phone, the same order as Map Claim.": "Giá trị có dấu / là số hợp đồng; còn lại tra lần lượt IMEI, mã giao dịch, số điện thoại, đúng thứ tự của Map Claim.",
@@ -480,6 +486,7 @@ const VI_RE = [
   [/^Download (.+)$/, "Tải về $1"],
   [/^Done in (\d+) min (\d+) s$/, "Xong trong $1 phút $2 giây"], [/^Done in (\d+) s$/, "Xong trong $1 giây"],
   [/^(\d+) min (\d+) s$/, "$1 phút $2 giây"], [/^(\d+) s$/, "$1 giây"],
+  [/^Clear filter from "(.+)"$/, 'Bỏ lọc cột "$1"'],
   [/^Filters cover the first ([\d,.]+) rows\. The file has all of them\.$/, "Bộ lọc chỉ tính trên $1 dòng đầu. File tải về có đủ."],
   [/^([\d,.]+) of ([\d,.]+) rows match the filters\.$/, "$1 trên $2 dòng khớp bộ lọc."],
   [/^(\d+) selected$/, "Đã chọn $1"], [/^([\d,.]+) more, type to narrow$/, "Còn $1 giá trị, gõ để thu hẹp"],
@@ -878,7 +885,7 @@ function tableHtml(t, i, tb){
   const thc = c => {
     if(!flt) return '<th>' + esc(tb.cols[c]) + '</th>';
     const on = (s.f[c] && s.f[c].size) || (s.sort && s.sort.c === c);
-    const ic = s.sort && s.sort.c === c ? (s.sort.d > 0 ? ARR_UP : ARR_DN) : ARR_DD;
+    const ic = (s.f[c] && s.f[c].size ? ARR_FN : "") + (s.sort && s.sort.c === c ? (s.sort.d > 0 ? ARR_UP : ARR_DN) : s.f[c] && s.f[c].size ? "" : ARR_DD);
     return '<th class="thf' + (on ? " on" : "") + '" onclick="thPop(event,\'' + key + '\',' + c + ')">' + esc(tb.cols[c]) + ic + '</th>';
   };
   if(!shown.length) return h + (flt && nf ? '<div class="tw"><table><thead><tr>' + cols.map(thc).join("") + '</tr></thead></table></div>' : "") +
@@ -907,7 +914,8 @@ const FILT = new Set(["searchdb"]), TB = {};
 const ARR_DD = '<svg class="tha" viewBox="0 0 10 10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
 const ARR_UP = '<svg class="tha" viewBox="0 0 10 10"><path d="M5 8.5V1.5M2 4.5 5 1.5 8 4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
 const ARR_DN = '<svg class="tha" viewBox="0 0 10 10"><path d="M5 1.5V8.5M2 5.5 5 8.5 8 5.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
-let POP = null;   // {key, c, q}
+const ARR_FN = '<svg class="tha" viewBox="0 0 10 10"><path d="M1.2 1.5h7.6L5.8 5.2v3.3L4.2 7.6V5.2z" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+let POP = null;   // {key, c, q, vals, cnt, draft}
 function cellKey(v){ return fmt(v); }
 function cellNum(v){
   if(typeof v === "number") return v;
@@ -929,56 +937,70 @@ function keepScroll(fn){
   fn();
   const nw = document.querySelector("#run-" + CUR + " .tw"); if(nw){ nw.scrollLeft = x; nw.scrollTop = y; }
 }
+function thVals(key, c){   // values left after the OTHER columns' filters, like Excel
+  const tb = TB[key], f = TV[key].f || {}, cnt = new Map();
+  tb.rows.forEach(row => {
+    for(const o in f) if(+o !== c && f[o] && f[o].size && !f[o].has(cellKey(row[o]))) return;
+    const k = cellKey(row[c]); cnt.set(k, (cnt.get(k) || 0) + 1);
+  });
+  const vals = [...cnt.keys()].filter(v => v !== "").sort(cmpCell);
+  if(cnt.has("")) vals.push("");
+  return {vals, cnt};
+}
 function thPop(ev, key, c){
   ev.stopPropagation();
   if(POP && POP.key === key && POP.c === c){ thClose(); return; }
-  POP = {key, c, q:""};
+  const s = TV[key], tb = TB[key], cur = s.f && s.f[c], vc = thVals(key, c);
+  POP = {key, c, q:"", vals:vc.vals, cnt:vc.cnt, draft:new Set(cur && cur.size ? vc.vals.filter(v => cur.has(v)) : vc.vals)};
   let box = $("thpop");
   if(!box){ box = document.createElement("div"); box.id = "thpop"; box.onclick = e => e.stopPropagation(); document.body.appendChild(box); }
   const r = ev.currentTarget.getBoundingClientRect();
-  box.style.top = Math.min(r.bottom + 4, innerHeight - 380) + "px";
+  box.style.top = Math.max(8, Math.min(r.bottom + 4, innerHeight - 470)) + "px";
   box.style.left = Math.max(8, Math.min(r.left, innerWidth - 300)) + "px";
-  thDraw(true);
-}
-function thDraw(focus){
-  const box = $("thpop"); if(!box || !POP) return;
-  const tb = TB[POP.key], s = TV[POP.key], c = POP.c, sel = (s.f && s.f[c]) || new Set();
-  const cnt = new Map();
-  tb.rows.forEach(row => { const k = cellKey(row[c]); cnt.set(k, (cnt.get(k) || 0) + 1); });
-  let vals = [...cnt.keys()].sort(cmpCell);
-  const q = POP.q.toLowerCase();
-  if(q) vals = vals.filter(v => v.toLowerCase().includes(q));
-  const LIM = 300, more = vals.length - LIM;
+  const nums = vc.vals.filter(v => v !== "").length && vc.vals.filter(v => v !== "").every(v => cellNum(v) !== null);
   const so = s.sort && s.sort.c === c ? s.sort.d : 0;
   box.innerHTML =
-    '<div class="throw"><button class="' + (so > 0 ? "on" : "") + '" onclick="thSort(1)">' + ARR_UP + 'Sort ascending</button>' +
-    '<button class="' + (so < 0 ? "on" : "") + '" onclick="thSort(-1)">' + ARR_DN + 'Sort descending</button></div>' +
-    '<input class="inp" id="thq" placeholder="Search values" value="' + esc(POP.q) + '" oninput="POP.q=this.value;thDraw()">' +
-    '<div class="thlist">' + vals.slice(0, LIM).map(v => '<div class="thv' + (sel.has(v) ? " on" : "") + '" data-v="' + esc(v) + '" onclick="thPick(this.dataset.v)">' +
-      (v === "" ? '<span><i>(blank)</i></span>' : '<span class="keep">' + esc(v) + '</span>') + '<b>' + cnt.get(v).toLocaleString() + '</b></div>').join("") +
-      (more > 0 ? '<div class="more">' + more.toLocaleString() + ' more, type to narrow</div>' : "") +
-      (!vals.length ? '<div class="more">No value matches.</div>' : "") + '</div>' +
-    '<div class="thfoot"><span class="muted">' + (sel.size ? sel.size + " selected" : "All values") + '</span>' +
-    '<button class="btn sm gho" onclick="thPickAll()">' + (sel.size ? "Clear" : "Select shown") + '</button>' +
-    '<button class="btn sm pri" onclick="thClose()">Done</button></div>';
-  const qi = $("thq");
-  if(qi){ qi.focus(); qi.setSelectionRange(qi.value.length, qi.value.length); }
+    '<div class="throw"><button class="' + (so > 0 ? "on" : "") + '" onclick="thSort(1)">' + ARR_UP + (nums ? "Sort Smallest to Largest" : "Sort A to Z") + '</button>' +
+    '<button class="' + (so < 0 ? "on" : "") + '" onclick="thSort(-1)">' + ARR_DN + (nums ? "Sort Largest to Smallest" : "Sort Z to A") + '</button>' +
+    '<button onclick="thUnfilter()"' + (cur && cur.size ? "" : " disabled") + '>' + ARR_FN + 'Clear filter from "' + esc(tb.cols[c]) + '"</button></div>' +
+    '<input class="inp" id="thq" placeholder="Search" oninput="POP.q=this.value;thList()" onkeydown="if(event.key===\'Enter\')thOk()">' +
+    '<div class="thlist" id="thlist"></div>' +
+    '<div class="thfoot"><div class="sp"></div><button class="btn sm pri" id="thok" onclick="thOk()">OK</button>' +
+    '<button class="btn sm gho" onclick="thClose()">Cancel</button></div>';
+  thList();
+  $("thq").focus();
 }
-function thApply(){ keepScroll(() => drawRun(CUR)); thDraw(); }
-function thSort(d){ const s = TV[POP.key]; s.sort = s.sort && s.sort.c === POP.c && s.sort.d === d ? null : {c:POP.c, d}; thApply(); }
-function thPick(v){
+function thShown(){ const q = POP.q.trim().toLowerCase(); return q ? POP.vals.filter(v => v.toLowerCase().includes(q)) : POP.vals; }
+function thList(){
+  const el = $("thlist"); if(!el || !POP) return;
+  const top = el.scrollTop, shown = thShown(), LIM = 1000, d = POP.draft;
+  const n = shown.filter(v => d.has(v)).length;
+  let h = '<label class="thv all"><input type="checkbox" id="thall"' + (shown.length && n === shown.length ? " checked" : "") +
+          ' onchange="thAll(this.checked)"><span>' + (POP.q.trim() ? "(Select All Search Results)" : "(Select All)") + '</span></label>';
+  h += shown.slice(0, LIM).map((v, i) => '<label class="thv"><input type="checkbox" data-i="' + i + '"' + (d.has(v) ? " checked" : "") +
+       ' onchange="thTick(this)">' + (v === "" ? '<span>(Blanks)</span>' : '<span class="keep">' + esc(v) + '</span>') +
+       '<b>' + POP.cnt.get(v).toLocaleString() + '</b></label>').join("");
+  if(shown.length > LIM) h += '<div class="more">' + (shown.length - LIM).toLocaleString() + ' more, type to narrow</div>';
+  if(!shown.length) h += '<div class="more">No value matches.</div>';
+  el.innerHTML = h; el.scrollTop = top;
+  const all = $("thall"); if(all) all.indeterminate = n > 0 && n < shown.length;
+  const ok = $("thok"); if(ok) ok.disabled = !(POP.q.trim() ? n : d.size);
+}
+function thTick(cb){ const v = thShown()[+cb.dataset.i]; cb.checked ? POP.draft.add(v) : POP.draft.delete(v); thList(); }
+function thAll(on){ thShown().forEach(v => on ? POP.draft.add(v) : POP.draft.delete(v)); thList(); }
+function thOk(){
+  if(!POP) return;
   const s = TV[POP.key]; s.f = s.f || {};
-  const set = s.f[POP.c] || (s.f[POP.c] = new Set());
-  set.has(v) ? set.delete(v) : set.add(v);
-  thApply();
+  // like Excel: with a search typed, only the ticked search results stay
+  const pick = POP.q.trim() ? thShown().filter(v => POP.draft.has(v)) : POP.vals.filter(v => POP.draft.has(v));
+  if(!pick.length) return;
+  if(pick.length === POP.vals.length && !(s.f[POP.c] && s.f[POP.c].size)) delete s.f[POP.c];
+  else if(pick.length === POP.vals.length) delete s.f[POP.c];
+  else s.f[POP.c] = new Set(pick);
+  thClose(); keepScroll(() => drawRun(CUR));
 }
-function thPickAll(){
-  const s = TV[POP.key]; s.f = s.f || {};
-  const set = s.f[POP.c] || (s.f[POP.c] = new Set());
-  if(set.size) set.clear();
-  else document.querySelectorAll("#thpop .thv").forEach(el => set.add(el.dataset.v));
-  thApply();
-}
+function thUnfilter(){ const s = TV[POP.key]; if(s.f) delete s.f[POP.c]; thClose(); keepScroll(() => drawRun(CUR)); }
+function thSort(d){ const s = TV[POP.key]; s.sort = {c:POP.c, d}; thClose(); keepScroll(() => drawRun(CUR)); }
 function thClear(key){ const s = TV[key]; s.f = {}; s.sort = null; thClose(); keepScroll(() => drawRun(CUR)); }
 function thClose(){ POP = null; const b = $("thpop"); if(b) b.remove(); }
 document.addEventListener("click", () => { if(POP) thClose(); });
