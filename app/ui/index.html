@@ -165,6 +165,28 @@
   tbody tr:hover td{background:var(--hover)}
   tr:last-child td{border-bottom:0}
   .more{color:var(--dim); font-size:12px; margin-top:6px}
+  th.thf{cursor:pointer; user-select:none}
+  th.thf:hover, th.thf.on{color:var(--ember)}
+  .tha{width:10px; height:10px; margin-left:5px; vertical-align:-1px; opacity:.55}
+  th.thf.on .tha, th.thf:hover .tha{opacity:1}
+  #thpop{position:fixed; z-index:30; width:290px; background:var(--elev); border:1px solid var(--line); border-radius:12px;
+         box-shadow:0 12px 32px rgba(0,0,0,.18); padding:8px; display:flex; flex-direction:column; gap:6px; font-size:12.5px}
+  #thpop .throw{display:flex; flex-direction:column}
+  #thpop .throw button{display:flex; align-items:center; gap:8px; background:none; border:0; color:var(--fg); text-align:left;
+         padding:6px 8px; border-radius:7px; cursor:pointer; font:inherit}
+  #thpop .throw button:hover{background:var(--hover)}
+  #thpop .throw button.on{color:var(--ember); font-weight:600}
+  #thpop .throw .tha{margin:0; opacity:1}
+  #thpop .inp{width:100%; box-sizing:border-box}
+  .thlist{max-height:230px; overflow:auto; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:4px 0}
+  .thv{display:flex; justify-content:space-between; gap:10px; padding:5px 8px; border-radius:7px; cursor:pointer}
+  .thv span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .thv b{font-weight:400; color:var(--dim); font-variant-numeric:tabular-nums}
+  .thv:hover{background:var(--hover)}
+  .thv.on{background:var(--ember); color:#fff}
+  .thv.on b{color:rgba(255,255,255,.8)}
+  .thfoot{display:flex; align-items:center; gap:6px}
+  .thfoot .muted{flex:1; font-size:12px}
 
   .colchk td{white-space:normal}
   .big{font-size:22px; font-weight:650}
@@ -385,7 +407,9 @@ const VI = {
   "Merge certificates to PDF": "Gộp GCN thành PDF", "PDF files": "Số file PDF",
   // Search Database
   "Type IMEI, phone, policy number or request ID on the left, then Search. Returns every premium row that matches, cancellations and /E versions included.": "Nhập IMEI, số điện thoại, số hợp đồng hoặc mã giao dịch bên trái rồi bấm Tìm. Trả về mọi dòng phí khớp, kể cả dòng hủy và các bản sửa đổi /E.",
-  "Search by": "Tra theo", "Auto": "Tự động", "Phone": "SĐT", "Policy": "Số HĐ", "Request ID": "Mã GD",
+  "Search by": "Tra theo", "Auto": "Tự động",
+  "Clear filters": "Bỏ lọc", "Sort ascending": "Sắp xếp tăng dần", "Sort descending": "Sắp xếp giảm dần", "Search values": "Tìm giá trị",
+  "(blank)": "(trống)", "Select shown": "Chọn hết đang hiện", "Clear": "Bỏ chọn", "All values": "Tất cả giá trị", "No value matches.": "Không có giá trị khớp.", "Phone": "SĐT", "Policy": "Số HĐ", "Request ID": "Mã GD",
   "A value with / is a policy number; the rest go IMEI, then request ID, then phone, the same order as Map Claim.": "Giá trị có dấu / là số hợp đồng; còn lại tra lần lượt IMEI, mã giao dịch, số điện thoại, đúng thứ tự của Map Claim.",
   "Prefix match: 25/45/09/KHAC/P000028 also returns /E01, /E02.": "Khớp tiền tố: 25/45/09/KHAC/P000028 ra cả /E01, /E02.",
   "Matches the last 9 digits.": "Khớp 9 số cuối.", "Values, one per line": "Giá trị, mỗi dòng một giá trị", "Row limit": "Giới hạn số dòng",
@@ -456,6 +480,9 @@ const VI_RE = [
   [/^Download (.+)$/, "Tải về $1"],
   [/^Done in (\d+) min (\d+) s$/, "Xong trong $1 phút $2 giây"], [/^Done in (\d+) s$/, "Xong trong $1 giây"],
   [/^(\d+) min (\d+) s$/, "$1 phút $2 giây"], [/^(\d+) s$/, "$1 giây"],
+  [/^Filters cover the first ([\d,.]+) rows\. The file has all of them\.$/, "Bộ lọc chỉ tính trên $1 dòng đầu. File tải về có đủ."],
+  [/^([\d,.]+) of ([\d,.]+) rows match the filters\.$/, "$1 trên $2 dòng khớp bộ lọc."],
+  [/^(\d+) selected$/, "Đã chọn $1"], [/^([\d,.]+) more, type to narrow$/, "Còn $1 giá trị, gõ để thu hẹp"],
   [/^Showing (\d+) of ([\d,.]+) rows\. The file has all of them\.$/, "Đang hiện $1 trên $2 dòng. File tải về có đủ."],
   [/^(\d+) warnings?$/, "$1 cảnh báo"], [/^Separate files \((\d+)\)$/, "File lẻ ($1)"],
   [/^All \((\d+)\)$/, "Tất cả ($1)"], [/^With note \((\d+)\)$/, "Có lưu ý ($1)"], [/^Not mapped \((\d+)\)$/, "Không map được ($1)"],
@@ -830,6 +857,14 @@ function tableHtml(t, i, tb){
   const key = t + ":" + i, s = TV[key] || (TV[key] = {view:0, main:false});
   let idx = tb.rows.map((_, k) => k);
   if(tb.views && tb.views[s.view]) idx = tb.views[s.view].rows;
+  const flt = FILT.has(t); TB[key] = tb;
+  if(flt && s.tb !== tb){ s.tb = tb; s.f = {}; s.sort = null; }
+  let nf = 0;
+  if(flt){
+    s.f = s.f || {};
+    for(const c in s.f){ const set = s.f[c]; if(set && set.size){ nf++; idx = idx.filter(k => set.has(cellKey(tb.rows[k][c]))); } }
+    if(s.sort) idx = idx.slice().sort((a, b) => cmpCell(tb.rows[a][s.sort.c], tb.rows[b][s.sort.c]) * s.sort.d);
+  }
   let cols = tb.cols.map((c, k) => k);
   if(tb.main && s.main) cols = tb.main;
   const LIM = 400, shown = idx.slice(0, LIM);
@@ -838,10 +873,18 @@ function tableHtml(t, i, tb){
        '\'].view=' + k + ';drawRun(CUR)">' + esc(v.label) + '</button>').join("") + '</div>';
   if(tb.main) h += '<label class="ck" style="margin-left:auto"><input type="checkbox" ' + (s.main ? "checked" : "") + ' onchange="TV[\'' + key +
        '\'].main=this.checked;drawRun(CUR)">Main columns only</label>';
+  if(flt && (nf || s.sort)) h += '<button class="btn sm gho" onclick="thClear(\'' + key + '\')">Clear filters</button>';
   h += '</div>';
-  if(!shown.length) return h + '<div class="muted">No rows here.</div></div>';
+  const thc = c => {
+    if(!flt) return '<th>' + esc(tb.cols[c]) + '</th>';
+    const on = (s.f[c] && s.f[c].size) || (s.sort && s.sort.c === c);
+    const ic = s.sort && s.sort.c === c ? (s.sort.d > 0 ? ARR_UP : ARR_DN) : ARR_DD;
+    return '<th class="thf' + (on ? " on" : "") + '" onclick="thPop(event,\'' + key + '\',' + c + ')">' + esc(tb.cols[c]) + ic + '</th>';
+  };
+  if(!shown.length) return h + (flt && nf ? '<div class="tw"><table><thead><tr>' + cols.map(thc).join("") + '</tr></thead></table></div>' : "") +
+                       '<div class="muted">No rows here.</div></div>';
   const links = new Set(tb.links || []);
-  h += '<div class="tw"><table><thead><tr>' + cols.map(c => '<th>' + esc(tb.cols[c]) + '</th>').join("") + '</tr></thead><tbody>';
+  h += '<div class="tw"><table><thead><tr>' + cols.map(thc).join("") + '</tr></thead><tbody>';
   shown.forEach(k => {
     const row = tb.rows[k];
     h += '<tr>' + cols.map(c => {
@@ -852,10 +895,94 @@ function tableHtml(t, i, tb){
     }).join("") + '</tr>';
   });
   h += '</tbody></table></div>';
-  const total = tb.views && tb.views[s.view] ? idx.length : tb.total;
+  const total = (tb.views && tb.views[s.view]) || nf ? idx.length : tb.total;
   if(total > shown.length) h += '<div class="more">Showing ' + shown.length + ' of ' + total.toLocaleString() + ' rows. The file has all of them.</div>';
+  if(flt && nf && total <= shown.length) h += '<div class="more">' + total.toLocaleString() + ' of ' + tb.rows.length.toLocaleString() + ' rows match the filters.</div>';
+  if(flt && tb.total > tb.rows.length) h += '<div class="more">Filters cover the first ' + tb.rows.length.toLocaleString() + ' rows. The file has all of them.</div>';
   return h + '</div>';
 }
+
+// ---- header filter / sort (Excel-like), for the tables in FILT
+const FILT = new Set(["searchdb"]), TB = {};
+const ARR_DD = '<svg class="tha" viewBox="0 0 10 10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+const ARR_UP = '<svg class="tha" viewBox="0 0 10 10"><path d="M5 8.5V1.5M2 4.5 5 1.5 8 4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+const ARR_DN = '<svg class="tha" viewBox="0 0 10 10"><path d="M5 1.5V8.5M2 5.5 5 8.5 8 5.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+let POP = null;   // {key, c, q}
+function cellKey(v){ return fmt(v); }
+function cellNum(v){
+  if(typeof v === "number") return v;
+  const x = String(v == null ? "" : v).trim();
+  let m = x.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return +m[3] * 10000 + +m[2] * 100 + +m[1];
+  if(/^-?[\d,]+(\.\d+)?%?$/.test(x) && /\d/.test(x)) return parseFloat(x.replace(/[,%]/g, ""));
+  return null;
+}
+function cmpCell(a, b){
+  const ea = a === null || a === undefined || a === "", eb = b === null || b === undefined || b === "";
+  if(ea || eb) return ea && eb ? 0 : ea ? 1 : -1;
+  const na = cellNum(a), nb = cellNum(b);
+  if(na !== null && nb !== null) return na - nb;
+  return String(a).localeCompare(String(b), "vi", {numeric:true, sensitivity:"base"});
+}
+function keepScroll(fn){
+  const tw = document.querySelector("#run-" + CUR + " .tw"), x = tw ? tw.scrollLeft : 0, y = tw ? tw.scrollTop : 0;
+  fn();
+  const nw = document.querySelector("#run-" + CUR + " .tw"); if(nw){ nw.scrollLeft = x; nw.scrollTop = y; }
+}
+function thPop(ev, key, c){
+  ev.stopPropagation();
+  if(POP && POP.key === key && POP.c === c){ thClose(); return; }
+  POP = {key, c, q:""};
+  let box = $("thpop");
+  if(!box){ box = document.createElement("div"); box.id = "thpop"; box.onclick = e => e.stopPropagation(); document.body.appendChild(box); }
+  const r = ev.currentTarget.getBoundingClientRect();
+  box.style.top = Math.min(r.bottom + 4, innerHeight - 380) + "px";
+  box.style.left = Math.max(8, Math.min(r.left, innerWidth - 300)) + "px";
+  thDraw(true);
+}
+function thDraw(focus){
+  const box = $("thpop"); if(!box || !POP) return;
+  const tb = TB[POP.key], s = TV[POP.key], c = POP.c, sel = (s.f && s.f[c]) || new Set();
+  const cnt = new Map();
+  tb.rows.forEach(row => { const k = cellKey(row[c]); cnt.set(k, (cnt.get(k) || 0) + 1); });
+  let vals = [...cnt.keys()].sort(cmpCell);
+  const q = POP.q.toLowerCase();
+  if(q) vals = vals.filter(v => v.toLowerCase().includes(q));
+  const LIM = 300, more = vals.length - LIM;
+  const so = s.sort && s.sort.c === c ? s.sort.d : 0;
+  box.innerHTML =
+    '<div class="throw"><button class="' + (so > 0 ? "on" : "") + '" onclick="thSort(1)">' + ARR_UP + 'Sort ascending</button>' +
+    '<button class="' + (so < 0 ? "on" : "") + '" onclick="thSort(-1)">' + ARR_DN + 'Sort descending</button></div>' +
+    '<input class="inp" id="thq" placeholder="Search values" value="' + esc(POP.q) + '" oninput="POP.q=this.value;thDraw()">' +
+    '<div class="thlist">' + vals.slice(0, LIM).map(v => '<div class="thv' + (sel.has(v) ? " on" : "") + '" data-v="' + esc(v) + '" onclick="thPick(this.dataset.v)">' +
+      (v === "" ? '<span><i>(blank)</i></span>' : '<span class="keep">' + esc(v) + '</span>') + '<b>' + cnt.get(v).toLocaleString() + '</b></div>').join("") +
+      (more > 0 ? '<div class="more">' + more.toLocaleString() + ' more, type to narrow</div>' : "") +
+      (!vals.length ? '<div class="more">No value matches.</div>' : "") + '</div>' +
+    '<div class="thfoot"><span class="muted">' + (sel.size ? sel.size + " selected" : "All values") + '</span>' +
+    '<button class="btn sm gho" onclick="thPickAll()">' + (sel.size ? "Clear" : "Select shown") + '</button>' +
+    '<button class="btn sm pri" onclick="thClose()">Done</button></div>';
+  const qi = $("thq");
+  if(qi){ qi.focus(); qi.setSelectionRange(qi.value.length, qi.value.length); }
+}
+function thApply(){ keepScroll(() => drawRun(CUR)); thDraw(); }
+function thSort(d){ const s = TV[POP.key]; s.sort = s.sort && s.sort.c === POP.c && s.sort.d === d ? null : {c:POP.c, d}; thApply(); }
+function thPick(v){
+  const s = TV[POP.key]; s.f = s.f || {};
+  const set = s.f[POP.c] || (s.f[POP.c] = new Set());
+  set.has(v) ? set.delete(v) : set.add(v);
+  thApply();
+}
+function thPickAll(){
+  const s = TV[POP.key]; s.f = s.f || {};
+  const set = s.f[POP.c] || (s.f[POP.c] = new Set());
+  if(set.size) set.clear();
+  else document.querySelectorAll("#thpop .thv").forEach(el => set.add(el.dataset.v));
+  thApply();
+}
+function thClear(key){ const s = TV[key]; s.f = {}; s.sort = null; thClose(); keepScroll(() => drawRun(CUR)); }
+function thClose(){ POP = null; const b = $("thpop"); if(b) b.remove(); }
+document.addEventListener("click", () => { if(POP) thClose(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && POP) thClose(); });
 
 // ------------------------------------------------------------ Fabric (Map Claim, Search Database)
 async function loadFabric(force){

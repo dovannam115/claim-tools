@@ -394,13 +394,13 @@ def run_searchdb(a):
     if recs:
         out = os.path.join(DIR, "Tra_cuu_database.xlsx")
         open(out, "wb").write(S.xuat_excel(recs, cols)); files.append(out)
-        tables.append(table("Premium rows", cols, S.bang_hien_thi(recs, cols), main=[c for c in cols if c in S.MAIN_COLS]))
+        tables.append(table("Premium rows", cols, S.bang_hien_thi(recs, cols), main=[c for c in cols if c in S.MAIN_COLS], limit=5000))
     warns = []
     if capped:
         warns.append("Kết quả đã bị cắt ở %d dòng, database còn dòng khớp nữa. Nâng giới hạn số dòng "
                      "hoặc tra bằng khoá hẹp hơn (IMEI / mã giao dịch)." % len(recs))
     if not recs:
-        warns.append("Không có dòng phí nào khớp. Kiểm tra lại khoá tra hoặc thử Auto.")
+        warns.append("Không có dòng phí nào khớp. Kiểm tra lại khoá tra hoặc thử tra theo loại khác.")
     npol = len({core.stext(r.get("Policy No")) or "" for _v, _k, r in recs})
     return {"stats": [stat("Values", len(vals)), stat("Found", len(vals) - len(miss), "good" if not miss else "warn"),
                       stat("Premium rows", len(recs)), stat("Policies", npol)],

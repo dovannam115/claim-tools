@@ -1,3 +1,7 @@
+v1.0.22 (20/11/2026)
+- Search Database: click a column header in the premium rows to sort it or filter it by value, like Excel. Clear filters resets the table.
+- Search Database: the result table now holds up to 5,000 rows for filtering; the Excel file still has all rows.
+
 v1.0.21 (20/11/2026)
 - Search Database: removed the Auto search mode. Pick IMEI, Phone, Policy or Request ID; IMEI is the default.
 
